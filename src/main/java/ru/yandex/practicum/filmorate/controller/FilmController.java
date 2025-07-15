@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.controller;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
@@ -17,7 +18,7 @@ import java.util.Map;
 public class FilmController {
     private static final Logger log = LoggerFactory.getLogger(FilmController.class);
 
-    Map<Long, Film> films = new HashMap<>();
+    private Map<Long, Film> films = new HashMap<>();
 
     @GetMapping
     public Collection<Film> getFilms() {
@@ -35,7 +36,7 @@ public class FilmController {
             film.setId(id + 1L);
         }
         films.put(film.getId(), film);
-        log.info("Add new film {}", film);
+        log.info("The movie was successfully added");
         return film;
     }
 
@@ -44,7 +45,7 @@ public class FilmController {
         validateOfData(film);
         Film oldVersion = films.get(film.getId());
         if (oldVersion == null) {
-            log.error("Film with id {} was not found", film.getId());
+            log.warn("Film with id {} was not found", film.getId());
             throw new NotFoundException("Film not found");
         }
         if (film.getName() != null) {
@@ -59,26 +60,26 @@ public class FilmController {
         if (film.getReleaseDate() != null) {
             oldVersion.setReleaseDate(film.getReleaseDate());
         }
-        log.info("Update film {}", oldVersion);
+        log.info("The movie was successfully updated id = {}",oldVersion.getId());
         return oldVersion;
     }
 
     public void validateOfData(Film film) {
-        if (film.getName() == null || film.getName().isEmpty()) {
-            log.error("Name is {} empty", film.getName());
+        if (!StringUtils.hasText(film.getName())) {
+            log.warn("Film name is empty");
             throw new ValidationException("Name can not be empty");
         }
         if (film.getDescription().length() > 200) {
-            log.error("More then 200 symbols, {}", film.getDescription().length());
+            log.warn("More then 200 symbols, {}", film.getDescription().length());
             throw new ValidationException("Limited of description is 200 symbols");
         }
         final LocalDate earliestReleaseDate = LocalDate.of(1895, 12, 28);
         if (film.getReleaseDate().isBefore(earliestReleaseDate)) {
-            log.error("Invalid release date {}", film.getReleaseDate());
+            log.warn("Invalid release date {}", film.getReleaseDate());
             throw new ValidationException("Date of realize can not be before 1895.12.28");
         }
         if (film.getDuration().isNegative() || film.getDuration().isZero()) {
-            log.error("Duration not positive {}", film.getDuration());
+            log.warn("Duration not positive {}", film.getDuration());
             throw new ValidationException("Duration must be positive");
         }
 

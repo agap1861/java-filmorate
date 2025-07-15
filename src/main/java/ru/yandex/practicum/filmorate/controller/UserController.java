@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.controller;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
@@ -16,7 +17,7 @@ import java.util.Map;
 @RequestMapping("/users")
 public class UserController {
 
-    Map<Long, User> users = new HashMap<>();
+    private Map<Long, User> users = new HashMap<>();
     private static final Logger log = LoggerFactory.getLogger(UserController.class);
 
     @GetMapping
@@ -28,7 +29,7 @@ public class UserController {
     public User postUser(@RequestBody User user) {
         validateOfDataForPost(user);
         users.put(user.getId(), user);
-        log.info("Add new user {}", user);
+        log.info("The user was successfully added");
         return user;
 
     }
@@ -39,7 +40,7 @@ public class UserController {
 
         User oldVersion = users.get(user.getId());
         if (oldVersion == null) {
-            log.error("user with id {} was not found", user.getId());
+            log.warn("user with id {} was not found", user.getId());
             throw new NotFoundException("user not found");
         }
         if (user.getName() != null) {
@@ -54,7 +55,7 @@ public class UserController {
         if (user.getEmail() != null) {
             oldVersion.setEmail(user.getEmail());
         }
-        log.info("Update user {}", oldVersion);
+        log.info("The user was successfully updated id = {}",oldVersion.getId());
         return oldVersion;
     }
 
@@ -69,39 +70,39 @@ public class UserController {
         }
 
 
-        if (user.getEmail() == null || user.getEmail().isEmpty() || !user.getEmail().contains("@")) {
-            log.error("invalid email: {}", user.getEmail());
+        if (!StringUtils.hasText(user.getEmail()) || !user.getEmail().contains("@")) {
+            log.debug("Invalid email: {}", user.getEmail());
             throw new ValidationException("invalid email");
         }
-        if (user.getLogin() == null || user.getLogin().isEmpty() || user.getLogin().contains(" ")) {
-            log.error("invalid login: {}", user.getLogin());
+        if (!StringUtils.hasText(user.getLogin()) || user.getLogin().contains(" ")) {
+            log.warn("invalid login: {}", user.getLogin());
             throw new ValidationException("login can not have spaces");
         }
         if (user.getBirthday().isAfter(LocalDate.now())) {
-            log.error("invalid birthday (in the future): {}", user.getBirthday());
+            log.warn("invalid birthday (in the future): {}", user.getBirthday());
             throw new ValidationException("the date of birth can't be in the future");
         }
-        if (user.getName() == null || user.getName().isEmpty()) {
+        if (!StringUtils.hasText(user.getName())) {
             user.setName(user.getLogin());
-            log.info("name was empty or null, set to email: {}", user.getEmail());
+            log.debug("name was empty or null, set to login: {}", user.getLogin());
         }
 
     }
 
     public void validateOfDataForPut(User user) {
-        if (user.getEmail() != null && !user.getEmail().contains("@")) {
-            log.error("invalid email: {}", user.getEmail());
+        if (!StringUtils.hasText(user.getEmail()) || !user.getEmail().contains("@")) {
+            log.debug("invalid email: {}", user.getEmail());
             throw new ValidationException("invalid email");
         }
 
-        if (user.getLogin() != null && user.getLogin().contains(" ")) {
-            log.error("invalid login: {}", user.getLogin());
+        if (!StringUtils.hasText(user.getLogin()) || user.getLogin().contains(" ")) {
+            log.warn("invalid login: {}", user.getLogin());
             throw new ValidationException("login can not have spaces");
         }
 
 
         if (user.getBirthday() != null && user.getBirthday().isAfter(LocalDate.now())) {
-            log.error("invalid birthday (in the future): {}", user.getBirthday());
+            log.warn("invalid birthday (in the future): {}", user.getBirthday());
             throw new ValidationException("the date of birth can't be in the future");
         }
 
