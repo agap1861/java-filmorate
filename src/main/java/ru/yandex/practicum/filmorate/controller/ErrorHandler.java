@@ -15,20 +15,22 @@ import java.util.Map;
 public class ErrorHandler {
 
 
-   @ExceptionHandler
-   @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.NOT_FOUND)
     public Map<String, String> handleNotFound(final NotFoundException e) {
-        return Map.of("error",e.getMessage());
+        return Map.of("error", e.getMessage());
     }
+
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public Map<String,String> handleValidation(final ValidationException e){
-       return Map.of("error",e.getMessage());
+    public Map<String, String> handleValidation(final ValidationException e) {
+        return Map.of("error", e.getMessage());
 
     }
+
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public String handleThrowable(final Throwable e){
-       return e.getMessage();
+    public String handleThrowable(final Throwable e) {
+        return e.getMessage();
     }
 }

@@ -26,7 +26,7 @@ public class UserService {
 
     public void removeFromFriends(long userId, long friendId) {
 
-        if (storage.getUserById(userId).isEmpty() || storage.getUserById(friendId).isEmpty()){
+        if (storage.getUserById(userId).isEmpty() || storage.getUserById(friendId).isEmpty()) {
             throw new NotFoundException("Not found");
         }
         if (!friends.containsKey(userId) || !friends.containsKey(friendId)) {

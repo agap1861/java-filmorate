@@ -16,7 +16,6 @@ import java.util.Collection;
 import java.util.List;
 
 
-
 @Slf4j
 @RestController
 @RequestMapping("/users")
@@ -61,7 +60,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}/friends/common/{otherId}")
-    public List<User> getCommonFriends(@PathVariable long id,@PathVariable long otherId) {
+    public List<User> getCommonFriends(@PathVariable long id, @PathVariable long otherId) {
         return service.getCommonFriends(id, otherId).stream()
                 .map(current -> {
                     if (storage.getUserById(current).isPresent()) {
@@ -86,15 +85,15 @@ public class UserController {
     }
 
     @PutMapping("/{id}/friends/{friendId}")
-    public void addInFriends(@PathVariable long id,@PathVariable long friendId) {
-        if (storage.getUserById(id).isEmpty() || storage.getUserById(friendId).isEmpty()){
-            throw  new NotFoundException("Not found");
+    public void addInFriends(@PathVariable long id, @PathVariable long friendId) {
+        if (storage.getUserById(id).isEmpty() || storage.getUserById(friendId).isEmpty()) {
+            throw new NotFoundException("Not found");
         }
         service.addInFriends(id, friendId);
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")
-    public void removeFromFriends(@PathVariable long id,@PathVariable long friendId) {
+    public void removeFromFriends(@PathVariable long id, @PathVariable long friendId) {
         service.removeFromFriends(id, friendId);
     }
 
