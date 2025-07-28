@@ -1,113 +1,101 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.util.StringUtils;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
+
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.user.UserService;
+import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
-import java.time.LocalDate;
+
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
+
+
+@Slf4j
 @RestController
 @RequestMapping("/users")
 public class UserController {
+    UserStorage storage;
+    UserService service;
 
-    private Map<Long, User> users = new HashMap<>();
-    private static final Logger log = LoggerFactory.getLogger(UserController.class);
+    @Autowired
+    public UserController(InMemoryUserStorage storage, UserService service) {
+        this.storage = storage;
+        this.service = service;
+    }
+
 
     @GetMapping
     public Collection<User> getUsers() {
-        return users.values();
+        return storage.getUsers();
+    }
+
+    @GetMapping("/{id}")
+    public User getUserById(@PathVariable long id) {
+        if (storage.getUserById(id).isPresent()) {
+            return storage.getUserById(id).get();
+        } else {
+            throw new NotFoundException("Not found");
+        }
+
+    }
+
+    @GetMapping("/{id}/friends")
+    public List<User> getAllFriendsOfUserById(@PathVariable long id) {
+
+        return service.getAllFriendsOfUSerById(id).stream()
+                .map(current -> {
+                    if (storage.getUserById(current).isPresent()) {
+                        return storage.getUserById(current).get();
+                    } else {
+                        throw new NotFoundException("Not found");
+                    }
+                })
+                .toList();
+    }
+
+    @GetMapping("/{id}/friends/common/{otherId}")
+    public List<User> getCommonFriends(@PathVariable long id,@PathVariable long otherId) {
+        return service.getCommonFriends(id, otherId).stream()
+                .map(current -> {
+                    if (storage.getUserById(current).isPresent()) {
+                        return storage.getUserById(current).get();
+                    } else {
+                        throw new NotFoundException("Not found");
+                    }
+                }).toList();
     }
 
     @PostMapping
     public User postUser(@RequestBody User user) {
-        validateOfDataForPost(user);
-        users.put(user.getId(), user);
-        log.info("The user was successfully added");
-        return user;
+        return storage.postUser(user);
 
     }
 
     @PutMapping
     public User putUser(@RequestBody User user) {
-        validateOfDataForPut(user);
-
-        User oldVersion = users.get(user.getId());
-        if (oldVersion == null) {
-            log.warn("user with id {} was not found", user.getId());
-            throw new NotFoundException("user not found");
-        }
-        if (user.getName() != null) {
-            oldVersion.setName(user.getName());
-        }
-        if (user.getBirthday() != null) {
-            oldVersion.setBirthday(user.getBirthday());
-        }
-        if (user.getLogin() != null) {
-            oldVersion.setLogin(user.getLogin());
-        }
-        if (user.getEmail() != null) {
-            oldVersion.setEmail(user.getEmail());
-        }
-        log.info("The user was successfully updated id = {}",oldVersion.getId());
-        return oldVersion;
-    }
-
-    public void validateOfDataForPost(User user) {
-
-        if (user.getId() == null) {
-            Long id = users.values().stream()
-                    .map(User::getId)
-                    .max(Long::compareTo)
-                    .orElse(0L);
-            user.setId(id + 1L);
-        }
-
-
-        if (!StringUtils.hasText(user.getEmail()) || !user.getEmail().contains("@")) {
-            log.debug("Invalid email: {}", user.getEmail());
-            throw new ValidationException("invalid email");
-        }
-        if (!StringUtils.hasText(user.getLogin()) || user.getLogin().contains(" ")) {
-            log.warn("invalid login: {}", user.getLogin());
-            throw new ValidationException("login can not have spaces");
-        }
-        if (user.getBirthday().isAfter(LocalDate.now())) {
-            log.warn("invalid birthday (in the future): {}", user.getBirthday());
-            throw new ValidationException("the date of birth can't be in the future");
-        }
-        if (!StringUtils.hasText(user.getName())) {
-            user.setName(user.getLogin());
-            log.debug("name was empty or null, set to login: {}", user.getLogin());
-        }
-
-    }
-
-    public void validateOfDataForPut(User user) {
-        if (!StringUtils.hasText(user.getEmail()) || !user.getEmail().contains("@")) {
-            log.debug("invalid email: {}", user.getEmail());
-            throw new ValidationException("invalid email");
-        }
-
-        if (!StringUtils.hasText(user.getLogin()) || user.getLogin().contains(" ")) {
-            log.warn("invalid login: {}", user.getLogin());
-            throw new ValidationException("login can not have spaces");
-        }
-
-
-        if (user.getBirthday() != null && user.getBirthday().isAfter(LocalDate.now())) {
-            log.warn("invalid birthday (in the future): {}", user.getBirthday());
-            throw new ValidationException("the date of birth can't be in the future");
-        }
+        return storage.putUser(user);
 
 
     }
 
+    @PutMapping("/{id}/friends/{friendId}")
+    public void addInFriends(@PathVariable long id,@PathVariable long friendId) {
+        if (storage.getUserById(id).isEmpty() || storage.getUserById(friendId).isEmpty()){
+            throw  new NotFoundException("Not found");
+        }
+        service.addInFriends(id, friendId);
+    }
+
+    @DeleteMapping("/{id}/friends/{friendId}")
+    public void removeFromFriends(@PathVariable long id,@PathVariable long friendId) {
+        service.removeFromFriends(id, friendId);
+    }
 
 }
