@@ -6,31 +6,33 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.user.UserService;
+import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
 
 import java.time.LocalDate;
 import java.util.stream.Stream;
 
 
 class UserControllerTest {
-    private UserController controller;
+    private UserService service;
 
     @BeforeEach
     public void createController() {
-        controller = new UserController();
+        service = new UserService(new InMemoryUserStorage());
     }
 
 
     @ParameterizedTest
     @MethodSource("invalidArgsFactory")
     public void shouldNotValidate(User user) {
-        Assertions.assertThrows(ValidationException.class, () -> controller.validateOfDataForPost(user));
+        Assertions.assertThrows(ValidationException.class, () -> service.validateOfDataForPost(user));
 
     }
 
     @ParameterizedTest
     @MethodSource("validateArgsFactory")
     public void shouldValidate(User user) {
-        Assertions.assertDoesNotThrow(() -> controller.validateOfDataForPost(user));
+        Assertions.assertDoesNotThrow(() -> service.validateOfDataForPost(user));
 
     }
 
