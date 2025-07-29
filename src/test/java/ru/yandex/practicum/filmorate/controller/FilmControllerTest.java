@@ -7,8 +7,10 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.film.FilmService;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
 
 
 import java.time.Duration;
@@ -18,24 +20,24 @@ import java.util.stream.Stream;
 
 
 class FilmControllerTest {
-    FilmStorage storage;
+    FilmService service;
 
     @BeforeEach
     public void createController() {
-        storage = new InMemoryFilmStorage();
+        service = new FilmService(new InMemoryFilmStorage(),new InMemoryUserStorage());
     }
 
 
     @ParameterizedTest
     @MethodSource("wrongArgsFactory")
     public void shouldNotValidate(Film film) {
-        Assertions.assertThrows(ValidationException.class, () -> storage.validateOfData(film));
+        Assertions.assertThrows(ValidationException.class, () -> service.validateOfData(film));
     }
 
     @ParameterizedTest
     @MethodSource("validArgFactory")
     public void shouldValidate(Film film) {
-        Assertions.assertDoesNotThrow(() -> storage.validateOfData(film));
+        Assertions.assertDoesNotThrow(() -> service.validateOfData(film));
 
     }
 

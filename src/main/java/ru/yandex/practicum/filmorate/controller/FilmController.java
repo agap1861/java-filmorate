@@ -5,91 +5,58 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
+
 
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.film.FilmService;
-import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
 
 
 import java.util.Collection;
 
-import java.util.Optional;
 
 @Slf4j
 @RestController
 @RequestMapping("/films")
 public class FilmController {
-    private FilmStorage storage;
+
     private FilmService service;
 
 
     @Autowired
-    FilmController(InMemoryFilmStorage storage, FilmService service) {
-        this.storage = storage;
+    FilmController(FilmService service) {
+
         this.service = service;
 
     }
 
     @GetMapping
     public Collection<Film> getFilms() {
-        return storage.getFilms();
+        return service.getFilms();
     }
 
     @GetMapping("/{id}")
     public Film getFilmById(@PathVariable long id) {
+        Film film = service.getFilmById(id);
 
-        Optional<Film> film = storage.findFilmById(id);
-
-        if (film.isEmpty()) {
-            throw new NotFoundException("Not find");
-        }
-        log.info("get film - {}", film.get().getId());
-        return film.get();
+        log.info("get film - {}", film.getId());
+        return film;
 
     }
 
     @GetMapping("/popular")
     public Collection<Film> getTopFilms(@RequestParam Integer count) {
-        if (count == null) {
-            return service.getTopCountFilms(count)
-                    .stream()
-                    .map(id -> {
-                        if (storage.findFilmById(id).isPresent()) {
-                            return storage.findFilmById(id).get();
-                        } else {
-                            throw new NotFoundException("Not found");
-                        }
-
-                    })
-                    .toList();
-
-        } else {
-            final Integer top10 = 10;
-            return service.getTopCountFilms(top10)
-                    .stream()
-                    .map(id -> {
-
-                        if (storage.findFilmById(id).isPresent()) {
-                            return storage.findFilmById(id).get();
-                        } else {
-                            throw new NotFoundException("Not found");
-                        }
-                    })
-                    .toList();
-        }
+        return service.getTopCountFilms(count);
 
     }
 
     @PostMapping
     public Film postFilm(@RequestBody Film film) {
-        return storage.postFilm(film);
+        return service.postFilm(film);
     }
 
     @PutMapping
     public Film putFilm(@RequestBody Film film) {
-        return storage.putFilm(film);
+        return service.putFilm(film);
     }
 
     @PutMapping("/{id}/like/{userId}")
