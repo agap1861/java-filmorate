@@ -55,7 +55,7 @@ public class FilmService {
 
     public List<Film> getTopCountFilms(Integer count) {
 
-        final int basic = count!=null ?count:10;
+        final int basic = count != null ? count : 10;
         return filmStorage.getTopFilms(basic);
 
     }
