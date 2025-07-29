@@ -18,11 +18,14 @@ public interface UserStorage {
 
     void addInFriends(long userId, long friendId);
 
-    Map<Long, Set<Long>> getFriends();
-
     List<User> getAllFriendsOfUserById(long id);
 
     Set<User> getCommonFriends(long userId, long friendId);
 
     void removeFriend(long userId, long friendId);
+
+    boolean isExistListOfFriends(long id);
+
+    boolean haveEachOtherAsFriends(long first, long second);
+
 }

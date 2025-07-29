@@ -26,6 +26,13 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public User postUser(User user) {
+        if (user.getId() == null) {
+            Long id = users.values().stream()
+                    .map(User::getId)
+                    .max(Long::compareTo)
+                    .orElse(0L);
+            user.setId(id + 1L);
+        }
         users.put(user.getId(), user);
         log.info("The user was successfully added id = {}", user.getId());
         return user;
@@ -73,10 +80,6 @@ public class InMemoryUserStorage implements UserStorage {
         friends.computeIfAbsent(friendId, key -> new HashSet<>()).add(userId);
     }
 
-    @Override
-    public Map<Long, Set<Long>> getFriends() {
-        return friends;
-    }
 
     @Override
     public List<User> getAllFriendsOfUserById(long id) {
@@ -104,6 +107,20 @@ public class InMemoryUserStorage implements UserStorage {
         friends.get(userId).remove(friendId);
         friends.get(friendId).remove(userId);
 
+    }
+
+    @Override
+    public boolean isExistListOfFriends(long id) {
+        if (friends.get(id) == null) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    @Override
+    public boolean haveEachOtherAsFriends(long first, long second) {
+        return friends.get(first).contains(second) && friends.get(second).contains(first);
     }
 
 }

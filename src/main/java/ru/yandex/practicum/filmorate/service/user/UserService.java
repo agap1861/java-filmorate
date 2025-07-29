@@ -34,10 +34,10 @@ public class UserService {
     public void removeFromFriends(long userId, long friendId) {
 
         validateExistFriends(userId, friendId);
-        if (!storage.getFriends().containsKey(userId) || !storage.getFriends().containsKey(friendId)) {
+        if (!storage.isExistListOfFriends(userId) || !storage.isExistListOfFriends(friendId)) {
             return;
         }
-        if (!storage.getFriends().get(userId).contains(friendId) || !storage.getFriends().get(friendId).contains(userId)) {
+        if (!storage.haveEachOtherAsFriends(userId, friendId)) {
             throw new NotFoundException("Not found");
         }
         storage.removeFriend(userId, friendId);
@@ -47,10 +47,8 @@ public class UserService {
 
     public List<User> getAllFriendsOfUSerById(long id) {
 
-        if (!storage.exists(id)) {
-            throw new NotFoundException("Not found");
-        }
-        if (!storage.getFriends().containsKey(id)) {
+        isExistUser(id);
+        if (!storage.isExistListOfFriends(id)) {
             return List.of();
         }
 
@@ -59,13 +57,13 @@ public class UserService {
     }
 
     public Set<User> getCommonFriends(long userId, long friendId) {
-        Set<Long> userSet = storage.getFriends().get(userId);
-        Set<Long> friendSet = storage.getFriends().get(friendId);
+        List<User> userSet = storage.getAllFriendsOfUserById(userId);
+        List<User> friendSet = storage.getAllFriendsOfUserById(friendId);
 
         validateExistFriends(userId, friendId);
 
         if (userSet == null || friendSet == null) {
-            throw new NotFoundException("Not found");
+            return Set.of();
         }
 
         return storage.getCommonFriends(userId, friendId);
@@ -92,15 +90,6 @@ public class UserService {
     }
 
     public void validateOfDataForPost(User user) {
-
-        if (user.getId() == null) {
-            Long id = storage.getUsers().stream()
-                    .map(User::getId)
-                    .max(Long::compareTo)
-                    .orElse(0L);
-            user.setId(id + 1L);
-        }
-
 
         if (!StringUtils.hasText(user.getEmail()) || !user.getEmail().contains("@")) {
             log.debug("Invalid email: {}", user.getEmail());
@@ -141,6 +130,12 @@ public class UserService {
 
     private void validateExistFriends(long userId, long friendId) {
         if (!storage.exists(userId) || !storage.exists(friendId)) {
+            throw new NotFoundException("Not found");
+        }
+    }
+
+    private void isExistUser(long id) {
+        if (!storage.exists(id)) {
             throw new NotFoundException("Not found");
         }
     }
