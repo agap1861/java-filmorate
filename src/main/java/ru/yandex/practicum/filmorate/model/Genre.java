@@ -1,6 +1,6 @@
 package ru.yandex.practicum.filmorate.model;
 
 public class Genre {
-    long genre_id;
+    long id;
     String name;
 }
