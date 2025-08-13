@@ -11,7 +11,7 @@
   ```
 SELECT *
 
-FROM film
+FROM films
    ```
 
 ### Get all users
@@ -19,7 +19,7 @@ FROM film
  ```
 SELECT *
    
-FROM user
+FROM users
    ```
 
 ### Found user by email
@@ -27,7 +27,7 @@ FROM user
  ```
 SELECT *
    
-FROM user
+FROM users
 
 WHERE email = 'foundUsers@gmail.com'
  ```
@@ -37,7 +37,7 @@ WHERE email = 'foundUsers@gmail.com'
  ```
 SELECT *
 
-FROM user
+FROM users
 
 ORDER BY birthday
  ```
@@ -49,9 +49,9 @@ SELECT f.name,
 
         g.name
 
-FROM film AS f
+FROM films AS f
 
-INNER JOIN genre AS g ON g.id = f.genre_id
+INNER JOIN genres AS g ON g.id = f.genre_id
 ```
 
 ### Get all films with MPA sorted by realise date
@@ -61,7 +61,7 @@ SELECT f.name,
 
         m.name
         
-FROM film AS f
+FROM films AS f
 
 LEFT OUTER JOIN mpa AS m ON f.mpa_id = m.id
 
@@ -75,9 +75,9 @@ SELECT f.name,
 
         COUNT(fl.user_id) AS like_count
         
-FROM film AS f
+FROM films AS f
 
-INNER JOIN film_likes AS fl ON fl.film_id = f.id
+INNER JOIN films_likes AS fl ON fl.film_id = f.id
 
 GROUP BY f.name
 ```
@@ -87,7 +87,7 @@ GROUP BY f.name
 ```
 SELECT *
 
-FROM user AS u
+FROM users AS u
 
 INNER JOIN friends AS f ON f.friend_id = u.id
 
@@ -99,9 +99,9 @@ WHERE f.user_id = 1
 ```
 SELECT *
 
-FROM user AS u
+FROM users AS u
 
-INNER JOIN friendRequest AS fq ON fq.friend_id = u.id
+INNER JOIN friendRequests AS fq ON fq.friend_id = u.id
 
 WHERE fq.friend_id = 1
 ```
@@ -111,7 +111,7 @@ WHERE fq.friend_id = 1
 ```
 SELECT *
 
-FROM film 
+FROM films 
 
 WHERE id IN (
 
@@ -127,13 +127,13 @@ WHERE user_id = 1)
 ```
 SELECT *
 
-FROM user 
+FROM users 
 
 WHERE id IN (
 
 SELECT user_id
 
-FROM film_likes 
+FROM films_likes 
 
 WHERE film_id =1)
 ```
@@ -144,9 +144,9 @@ WHERE film_id =1)
 SELECT f.name,
         COUNT(fl.user_id)
         
-FROM film AS f
+FROM films AS f
 
-LEFT OUTER JOIN film_likes AS fl ON fl.film_id = f.id
+LEFT OUTER JOIN films_likes AS fl ON fl.film_id = f.id
 
 GROUP BY f.name 
 
@@ -159,9 +159,9 @@ HAVING COUNT(fl.user_id) > 2
 SELECT u.name,
         COUNT(f.user_id)
 
-FROM user AS u
+FROM users AS u
 
-INNER JOIN friends as f ON f.user_id = u.id
+INNER JOIN friends AS f ON f.user_id = u.id
 
 GROUP BY u.name
 ```
@@ -171,13 +171,13 @@ GROUP BY u.name
 ```
 SELECT *
 
-FROM film AS f
+FROM films AS f
 
 WHERE id IN (
 
 SELECT film_id
         
-FROM film_likes
+FROM films_likes
 
 GROUP BY film_id
 
@@ -193,9 +193,9 @@ SELECT f.name,
 
         g.name
         
-FROM film as f
+FROM films as f
 
-LEFT OUTER JOIN genre AS g ON g.id = f.genre_id
+LEFT OUTER JOIN genres AS g ON g.id = f.genre_id
 
 LEFT OUTER JOIN film_likes AS fl ON fl.film_id = f.id
 
@@ -211,11 +211,11 @@ SELECT u.name ,
 
         COUNT(fl.user_id)
         
-FROM user AS u 
+FROM users AS u 
 
 LEFT OUTER JOIN friends AS f ON f.friend_id = u.id
 
-LEFT OUTER JOIN film_likes AS fl ON  u.id = fl.user_id 
+LEFT OUTER JOIN films_likes AS fl ON  u.id = fl.user_id 
 
 WHERE f.user_id = 1
 
