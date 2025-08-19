@@ -85,7 +85,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         );
         film.setId(id);
         if (film.getGenres() != null && !film.getGenres().isEmpty()) {
-            // String query = "INSERT INTO film_genres (film_id, genre_id) VALUES(?, ?) ";
+              // String query = "INSERT INTO film_genres (film_id, genre_id) VALUES(?, ?) ";
             film.getGenres()
                     .forEach(genre ->
                             jdbc.update(ADD_IN_FILMS_GENRES, film.getId().intValue(), genre.getId().intValue()));
