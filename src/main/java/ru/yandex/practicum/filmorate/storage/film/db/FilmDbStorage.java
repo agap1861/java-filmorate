@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.storage.film.db;
 
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -22,6 +23,7 @@ import java.sql.Date;
 import java.util.*;
 
 
+@Slf4j
 @Repository
 
 public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
@@ -30,23 +32,37 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private final MPARowMapper mpaMapper;
 
     private static final String GET_ALL_FILMS = "SELECT f.id, f.name, f.description, f.release_date, f.duration, " +
-            "f.mpa_id, m.name AS mpa_name " +
+            "f.mpa_id, m.name AS mpa_name, " +
+            "GROUP_CONCAT(g.id) AS genres_id, " +
+            "GROUP_CONCAT(g.name) AS genre_names " +
             "FROM films AS f " +
-            "INNER JOIN  mpa AS m ON m.id=f.mpa_id";
+            "INNER JOIN  mpa AS m ON m.id=f.mpa_id " +
+            "LEFT JOIN film_genres AS fg ON fg.film_id = f.id " +
+            "LEFT JOIN genres AS g ON g.id = fg.genre_id " +
+            "GROUP BY f.id";
     private static final String INSERT_USER = "INSERT INTO films (name,description,release_date,duration,mpa_id)" +
             " VALUES (?, ?, ?, ?, ?)";
     private static final String UPDATE_FILM = "UPDATE films SET ";
     private static final String GET_FILM_BY_ID = "SELECT f.id, f.name, f.description, f.release_date, f.duration, " +
-            "f.mpa_id, m.name AS mpa_name " +
+            "f.mpa_id, m.name AS mpa_name, " +
+            "GROUP_CONCAT(g.id) AS genres_id, " +
+            "GROUP_CONCAT(g.name) AS genre_names " +
             "FROM films AS f " +
             "INNER JOIN  mpa AS m ON m.id=f.mpa_id " +
-            "WHERE f.id = ?";
+            "LEFT JOIN film_genres AS fg ON fg.film_id = f.id " +
+            "LEFT JOIN genres AS g ON g.id = fg.genre_id " +
+            "WHERE f.id = ? " +
+            "GROUP BY f.id";
     private static final String REMOVE_LIKE = "DELETE FROM films_like WHERE film_id = ? AND user_id = ?";
     private static final String GET_TOP_FILMS = "SELECT f.id, f.name, f.description, f.release_date, f.duration, " +
-            "f.mpa_id, m.name AS mpa_name " +
+            "f.mpa_id, m.name AS mpa_name, " +
+            "GROUP_CONCAT(g.id) AS genres_id, " +
+            "GROUP_CONCAT(g.name) AS genre_names " +
             "FROM films AS f " +
             "LEFT OUTER JOIN films_like as fl ON fl.film_id = f.id " +
             "INNER JOIN  mpa AS m ON m.id=f.mpa_id " +
+            "LEFT JOIN film_genres AS fg ON fg.film_id = f.id " +
+            "LEFT JOIN genres AS g ON g.id = fg.genre_id " +
             "GROUP BY f.id " +
             "ORDER BY COUNT(fl.user_id) DESC " +
             "LIMIT ? ";
@@ -56,7 +72,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private static final String GET_GENRE_BY_ID = "SELECT * FROM genres WHERE id = ?";
     private static final String GET_ALL_MPA = "SELECT * FROM mpa ORDER BY id";
     private static final String GET_MPA_BY_ID = "SELECT * FROM mpa WHERE id = ?";
-    private static final String ADD_IN_FILMS_GENRES = "INSERT INTO film_genres (film_id, genre_id) VALUES(?, ?) ";
+    private static final String ADD_IN_FILMS_GENRES = "INSERT INTO film_genres (film_id, genre_id) VALUES (?, ?) ";
 
 
     public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper, GenreRowMapper genreMapper, MPARowMapper mpaMapper) {
@@ -68,6 +84,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     @Override
     public Collection<Film> getFilms() {
+
 
         return getAll(GET_ALL_FILMS);
     }
@@ -85,7 +102,6 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         );
         film.setId(id);
         if (film.getGenres() != null && !film.getGenres().isEmpty()) {
-            // String query = "INSERT INTO film_genres (film_id, genre_id) VALUES(?, ?) ";
             film.getGenres()
                     .forEach(genre ->
                             jdbc.update(ADD_IN_FILMS_GENRES, film.getId().intValue(), genre.getId().intValue()));
@@ -122,7 +138,10 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     @Override
     public Optional<Film> findFilmById(long id) {
+
         return getOneById(GET_FILM_BY_ID, id);
+
+
     }
 
     @Override
@@ -141,6 +160,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     @Override
     public List<Film> getTopFilms(Integer count) {
+
 
         return queryForLst(GET_TOP_FILMS, count);
     }
@@ -185,5 +205,6 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             return Optional.empty();
         }
     }
+
 
 }

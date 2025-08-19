@@ -86,13 +86,15 @@ public class FilmService {
             film.setMpa(mpa);
         }
         if (film.getGenres() != null) {
+
             Iterator<Genre> iterator = film.getGenres().iterator();
             while (iterator.hasNext()) {
                 Genre genre = iterator.next();
                 Genre fullGenre = filmStorage.getGenreById(genre.getId()).orElseThrow(() -> new NotFoundException("not found"));
                 genre.setName(fullGenre.getName());
-
             }
+            List<Genre> unique = film.getGenres().stream().distinct().toList();
+            film.setGenres(unique);
 
         } else {
             film.setGenres(List.of());
@@ -128,6 +130,8 @@ public class FilmService {
 
     public Film getFilmById(long id) {
         Film film = filmStorage.findFilmById(id).orElseThrow(() -> new NotFoundException("not found"));
+
+
         return film;
     }
 
