@@ -1,13 +1,14 @@
 package ru.yandex.practicum.filmorate.service.user;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import ru.yandex.practicum.filmorate.exception.DuplicateFriendException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
@@ -19,28 +20,63 @@ public class UserService {
 
     UserStorage storage;
 
-    public UserService(InMemoryUserStorage storage) {
+    public UserService(@Qualifier("userDbStorage") UserStorage storage) {
         this.storage = storage;
     }
 
     public void addInFriends(long userId, long friendId) {
 
         validateExistFriends(userId, friendId);
-        storage.addInFriends(userId, friendId);
+/*
+        if (storage.isHaveUserRequestFromOtherUser(userId, friendId)) {
+            log.info("Есть ли у кого то из низ запрос в друзья " + storage.isHaveUserRequestFromOtherUser(userId, friendId));
+            storage.addInFriends(userId, friendId);
+        } else {
+            if (storage.haveEachOtherAsFriends(userId, friendId)) {
+                throw new DuplicateFriendException("These users already in friends list");
+            } else {
+                try {
+                    log.info(storage.getAllRequestById(userId).toString());
+                    log.info("---------");
+                    log.info(storage.getAllRequestById(friendId).toString());
+
+                    storage.createRequestInFriend(userId, friendId);
+                } catch (Exception e) {
+                    log.info(e.getMessage());
+                }
+
+
+            }
+
+        }*/
+
+        if (storage.haveUserFriend(userId, friendId)) {
+            log.debug("Пользователь " + userId + " и " + friendId + " уже в друзьях");
+            throw new DuplicateFriendException("These users already in friends list");
+
+        } else {
+            storage.addInFriends(userId, friendId);
+        }
 
 
     }
 
     public void removeFromFriends(long userId, long friendId) {
 
-        validateExistFriends(userId, friendId);
-        if (!storage.isExistListOfFriends(userId) || !storage.isExistListOfFriends(friendId)) {
-            return;
-        }
-        if (!storage.haveEachOtherAsFriends(userId, friendId)) {
-            throw new NotFoundException("Not found");
-        }
-        storage.removeFriend(userId, friendId);
+            validateExistFriends(userId, friendId);
+            log.info("До удаления" + getAllFriendsOfUSerById(userId).toString()) ;
+
+            if (!storage.haveUserFriend(userId, friendId)) {
+                return;
+                //throw new NotFoundException("Not found");
+            }
+            storage.removeFriend(userId, friendId);
+            log.info("После удаления удаления" + getAllFriendsOfUSerById(userId).toString()) ;
+
+
+
+
+
 
 
     }
@@ -51,6 +87,7 @@ public class UserService {
         if (!storage.isExistListOfFriends(id)) {
             return List.of();
         }
+       // log.info("Список друзей пользователя " + id  + Arrays.toString(storage.getAllFriendsOfUserById(id).toArray()));
 
         return storage.getAllFriendsOfUserById(id);
 
@@ -81,10 +118,17 @@ public class UserService {
 
     public User postUser(User user) {
         validateOfDataForPost(user);
+        try {
+            return storage.postUser(user);
+        } catch (Exception e) {
+            log.warn(e.getMessage());
+        }
         return storage.postUser(user);
+
     }
 
     public User putUser(User user) {
+        isExistUser(user.getId());
         validateOfDataForPut(user);
         return storage.putUser(user);
     }
@@ -129,8 +173,11 @@ public class UserService {
     }
 
     private void validateExistFriends(long userId, long friendId) {
+        log.info("Проверка на существование первого пользователя : " + userId + " " + storage.exists(userId) + " " +
+                friendId + " " + "второго : " + storage.exists(friendId));
         if (!storage.exists(userId) || !storage.exists(friendId)) {
             throw new NotFoundException("Not found");
+
         }
     }
 

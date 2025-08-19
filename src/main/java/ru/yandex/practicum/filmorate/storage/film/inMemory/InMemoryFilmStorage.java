@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.storage.film;
+package ru.yandex.practicum.filmorate.storage.film.inMemory;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -6,6 +6,9 @@ import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.MPA;
+import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 
 import java.util.*;
@@ -90,5 +93,25 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public void removeLike(long idFilm, long idUser) {
         filmsLikes.get(idFilm).remove(idFilm);
+    }
+
+    @Override
+    public List<Genre> getAllGenres() {
+        return List.of();
+    }
+
+    @Override
+    public Optional<Genre> getGenreById(long id) {
+        return Optional.empty();
+    }
+
+    @Override
+    public List<MPA> getAllMpa() {
+        return List.of();
+    }
+
+    @Override
+    public Optional<MPA> getMpaById(long id) {
+        return Optional.empty();
     }
 }

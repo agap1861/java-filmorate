@@ -8,10 +8,13 @@ import org.springframework.web.bind.annotation.*;
 
 
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.MPA;
 import ru.yandex.practicum.filmorate.service.film.FilmService;
 
 
 import java.util.Collection;
+import java.util.List;
 
 
 @Slf4j
@@ -68,6 +71,22 @@ public class FilmController {
     public void removeLike(@PathVariable long id, @PathVariable long userId) {
         service.removeLike(id, userId);
     }
+/*    @GetMapping("/genres")
+    public List<Genre> getGenres(){
+        return service.getAllGenres();
+    }
+    @GetMapping("/genres/{id}")
+    public Genre getGenreById(@PathVariable long id){
+        return service.getGenreById(id);
+    }
+    @GetMapping("/mpa")
+    public List<MPA> getAllMpa(){
+        return service.getAllMpa();
+    }
+    @GetMapping("/mpa/{id}")
+    public MPA getMpaById(@PathVariable long id){
+        return service.getMpaById(id);
+    }*/
 
 
 }

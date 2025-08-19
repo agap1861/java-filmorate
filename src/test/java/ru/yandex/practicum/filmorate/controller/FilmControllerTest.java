@@ -9,8 +9,8 @@ import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.film.FilmService;
 
-import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
-import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.film.inMemory.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.storage.user.InMemory.InMemoryUserStorage;
 
 
 import java.time.Duration;

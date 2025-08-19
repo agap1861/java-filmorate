@@ -4,10 +4,13 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.jdbc.core.JdbcTemplate;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.user.UserService;
-import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.mappers.UserRowMapper;
+import ru.yandex.practicum.filmorate.storage.user.InMemory.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.user.db.UserDbStorage;
 
 import java.time.LocalDate;
 import java.util.stream.Stream;
@@ -18,7 +21,7 @@ class UserControllerTest {
 
     @BeforeEach
     public void createController() {
-        service = new UserService(new InMemoryUserStorage());
+        service = new UserService(new UserDbStorage(new JdbcTemplate(),new UserRowMapper()));
     }
 
 
