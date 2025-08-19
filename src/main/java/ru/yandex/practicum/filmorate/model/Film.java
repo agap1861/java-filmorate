@@ -6,7 +6,7 @@ import lombok.Data;
 
 import java.time.Duration;
 import java.time.LocalDate;
-import java.util.ArrayList;
+
 import java.util.List;
 
 
@@ -28,7 +28,11 @@ public class Film {
         this.releaseDate = releaseDate;
         this.duration = duration;
     }
-    public Film(){};
+
+    public Film() {
+    }
+
+    ;
 
     @JsonGetter("duration")
     public long getDurationInMinutes() {

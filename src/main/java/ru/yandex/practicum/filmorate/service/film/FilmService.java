@@ -13,11 +13,9 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MPA;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.film.db.FilmDbStorage;
-import ru.yandex.practicum.filmorate.storage.film.inMemory.InMemoryFilmStorage;
-import ru.yandex.practicum.filmorate.storage.user.InMemory.InMemoryUserStorage;
+
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
-import ru.yandex.practicum.filmorate.storage.user.db.UserDbStorage;
+
 
 import java.time.LocalDate;
 import java.util.*;
@@ -88,16 +86,15 @@ public class FilmService {
             film.setMpa(mpa);
         }
         if (film.getGenres() != null) {
-           // Iterator  iterator = film.getGenre().iterator();
             Iterator<Genre> iterator = film.getGenres().iterator();
-            while (iterator.hasNext()){
+            while (iterator.hasNext()) {
                 Genre genre = iterator.next();
-                Genre fullGenre = filmStorage.getGenreById(genre.getId()).orElseThrow(()->new NotFoundException("not found"));
+                Genre fullGenre = filmStorage.getGenreById(genre.getId()).orElseThrow(() -> new NotFoundException("not found"));
                 genre.setName(fullGenre.getName());
 
             }
 
-        }else {
+        } else {
             film.setGenres(List.of());
         }
 
@@ -113,17 +110,13 @@ public class FilmService {
     }
 
     public Film putFilm(Film film) {
-        if (filmStorage.findFilmById(film.getId()).isEmpty()){
+        if (filmStorage.findFilmById(film.getId()).isEmpty()) {
             throw new NotFoundException("not found");
         }
-        try {
-            validateOfData(film);
-            if (filmStorage.findFilmById(film.getId()).isEmpty()) {
-                log.warn("Film with id {} was not found", film.getId());
-                throw new NotFoundException("Film not found");
-            }
-        }catch (Exception e){
-            log.info(e.getMessage());
+        validateOfData(film);
+        if (filmStorage.findFilmById(film.getId()).isEmpty()) {
+            log.warn("Film with id {} was not found", film.getId());
+            throw new NotFoundException("Film not found");
         }
 
         return filmStorage.putFilm(film);

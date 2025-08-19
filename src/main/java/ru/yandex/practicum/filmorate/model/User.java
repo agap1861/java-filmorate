@@ -13,7 +13,11 @@ public class User {
     private String name;
     private LocalDate birthday;
 
-    public User(){};
+    public User() {
+    }
+
+    ;
+
     @Autowired
     public User(Long id, String email, String login, String name, LocalDate birthday) {
         this.id = id;

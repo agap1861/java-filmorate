@@ -19,11 +19,12 @@ public class GenreController {
     private final FilmService service;
 
     @GetMapping()
-    public List<Genre> getGenres(){
+    public List<Genre> getGenres() {
         return service.getAllGenres();
     }
+
     @GetMapping("/{id}")
-    public Genre getGenreById(@PathVariable long id){
+    public Genre getGenreById(@PathVariable long id) {
         return service.getGenreById(id);
     }
 

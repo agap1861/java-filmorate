@@ -1,171 +1,147 @@
 package ru.yandex.practicum.filmorate.storage.user.db;
 
-import lombok.RequiredArgsConstructor;
+
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.EmptyResultDataAccessException;
+
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.core.RowMapper;
+
 import org.springframework.stereotype.Repository;
-import ru.yandex.practicum.filmorate.exception.InternalServerException;
+
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.mappers.UserRowMapper;
+import ru.yandex.practicum.filmorate.storage.BaseDbStorage;
+
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.Statement;
+
 import java.util.*;
 
 @Slf4j
-@RequiredArgsConstructor
+
 @Repository
-public class UserDbStorage implements UserStorage {
-    private final JdbcTemplate jdbc;
-    private final UserRowMapper mapper;
+public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
+
+    private static final String GET_ALL_USERS = "SELECT * FROM users";
+    private static final String INSERT_USER = "INSERT INTO users (name,email,login,birthday) VALUES (?, ?, ?, ?)";
+    private static final String UPDATE_USER = "UPDATE users SET ";
+    private static final String GET_USER_BY_ID = "SELECT * FROM users WHERE id = ?";
+    private static final String REMOVE_USER_BY_ID = "DELETE FROM friends WHERE (user_id = ? AND friend_id = ?) ";
+    private static final String GET_ALL_FRIENDS_BY_ID = "SELECT * " +
+            "FROM users AS u " +
+            "INNER JOIN friends AS f ON f.friend_id = u.id " +
+            "WHERE f.user_id = ?";
+    private static final String EXIST = "SELECT COUNT(*) FROM users WHERE id = ?";
+    private static final String ADD_IN_FRIEND = "INSERT INTO friends (user_id,friend_id) VALUES (?, ?)";
+    private static final String GET_COMMON_FRIENDS = "SELECT * " +
+            "FROM users AS u " +
+            "WHERE id  IN (SELECT friend_id FROM friends WHERE user_id = ?) " +
+            "AND id IN (SELECT friend_id FROM friends WHERE user_id = ?)";
+    private static final String GET_LIST_FRIENDS = "SELECT COUNT(*) " +
+            "FROM friends " +
+            "WHERE user_id = ?";
+    private static final String QUERY_FOR_FRIEND = "SELECT COUNT(*) " +
+            "FROM friends " +
+            "WHERE (user_id = ? AND friend_id = ?) ";
+
+
+    public UserDbStorage(JdbcTemplate jdbc, RowMapper<User> mapper) {
+        super(jdbc, mapper);
+    }
 
     @Override
     public Collection<User> getUsers() {
-        String query = "SELECT * FROM users";
-        return jdbc.query(query, mapper);
+        return getAll(GET_ALL_USERS);
+
     }
 
     @Override
     public User postUser(User user) {
-        String sql = "INSERT INTO users (name,email,login,birthday) VALUES (?, ?, ?, ?)";
-        GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
-        jdbc.update(connection -> {
-            PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            statement.setString(1, user.getName());
-            statement.setString(2, user.getEmail());
-            statement.setString(3, user.getLogin());
-            statement.setDate(4, Date.valueOf(user.getBirthday()));
-            return statement;
-        }, keyHolder);
-        Number id = keyHolder.getKey();
-        if (id != null) {
-            user.setId(id.longValue());
-            return user;
-        } else {
-            throw new InternalServerException("Unable to save data");
-        }
+        long id = post(
+                INSERT_USER,
+                user.getName(),
+                user.getEmail(),
+                user.getLogin(),
+                Date.valueOf(user.getBirthday()));
+        user.setId(id);
+        return user;
 
     }
 
     @Override
     public User putUser(User user) {
+        Map<String, Object> fields = new LinkedHashMap<>();
 
-        List<Object> fields = new ArrayList<>();
-        List<String> update = new ArrayList<>();
         if (user.getName() != null) {
-
-            fields.add(user.getName());
-            update.add("name = ?");
+            fields.put("name", user.getName());
         }
         if (user.getEmail() != null) {
+            fields.put("email", user.getEmail());
 
-            fields.add(user.getEmail());
-            update.add("email = ?");
         }
         if (user.getLogin() != null) {
-
-            fields.add(user.getLogin());
-            update.add("login = ?");
+            fields.put("login", user.getLogin());
         }
         if (user.getBirthday() != null) {
-
-            fields.add(Date.valueOf(user.getBirthday()));
-            update.add("birthday = ?");
+            fields.put("birthday", Date.valueOf(user.getBirthday()));
         }
         if (fields.isEmpty()) {
             throw new IllegalArgumentException();
         }
-        String result = "UPDATE users SET " + String.join(", ", update) + " WHERE id = ?";
-        fields.add(user.getId());
+        update(UPDATE_USER, fields, user.getId());
 
-        int rowsUpdated = jdbc.update(result, fields.toArray());
-        if (rowsUpdated == 0) {
-            throw new InternalServerException("Unable to update data");
-        }
         return user;
-
 
     }
 
     @Override
     public Optional<User> getUserById(long id) {
-        String query = "SELECT * FROM users WHERE id = ?";
-        try {
-            User user = jdbc.queryForObject(query, mapper, id);
-            return Optional.ofNullable(user);
-
-        } catch (EmptyResultDataAccessException ignored) {
-            return Optional.empty();
-        }
+        return getOneById(GET_USER_BY_ID, id);
 
     }
 
     @Override
     public boolean exists(long id) {
-        String sql = "SELECT COUNT(*) FROM users WHERE id = ?";
-        Integer count = jdbc.queryForObject(sql, Integer.class, id);
+        Integer count = jdbc.queryForObject(EXIST, Integer.class, id);
         return count != null && count > 0;
     }
 
     @Override
     public void addInFriends(long userId, long friendId) {
-        String queryAdd = "INSERT INTO friends (user_id,friend_id) VALUES (?, ?)";
-        jdbc.update(queryAdd, userId, friendId);
+
+        jdbc.update(ADD_IN_FRIEND, userId, friendId);
 
     }
 
     @Override
     public List<User> getAllFriendsOfUserById(long id) {
-        String query = "SELECT * " +
-                "FROM users AS u " +
-                "INNER JOIN friends AS f ON f.friend_id = u.id " +
-                "WHERE f.user_id = ?";
-        return jdbc.query(query, mapper, id);
+        return queryForLst(GET_ALL_FRIENDS_BY_ID, id);
 
     }
 
     @Override
     public Set<User> getCommonFriends(long userId, long friendId) {
-        String query = "SELECT * " +
-                "FROM users AS u " +
-                "WHERE id  IN (SELECT friend_id FROM friends WHERE user_id = ?) " +
-                "AND id IN (SELECT friend_id FROM friends WHERE user_id = ?)";
-        return new HashSet<>(jdbc.query(query, mapper, userId, friendId));
+
+        return new HashSet<>(jdbc.query(GET_COMMON_FRIENDS, mapper, userId, friendId));
     }
 
     @Override
     public void removeFriend(long userId, long friendId) {
-        log.info("Список друзей пользователя " + userId + Arrays.toString(getAllFriendsOfUserById(userId).toArray()));
-        String query = "DELETE " +
-                "FROM friends " +
-                "WHERE (user_id = ? AND friend_id = ?) ";
-        jdbc.update(query, userId, friendId);
-        log.info("Список друзей пользователя " + userId + Arrays.toString(getAllFriendsOfUserById(userId).toArray()));
-
+        remove(REMOVE_USER_BY_ID, userId, friendId);
     }
 
     @Override
     public boolean isExistListOfFriends(long id) {
-        String query = "SELECT COUNT(*) " +
-                "FROM friends " +
-                "WHERE user_id = ?";
-        Integer count = jdbc.queryForObject(query, Integer.class, id);
+
+        Integer count = jdbc.queryForObject(GET_LIST_FRIENDS, Integer.class, id);
         return count != null && count > 0;
 
     }
 
     @Override
     public boolean haveUserFriend(long first, long second) {
-        String query = "SELECT COUNT(*) " +
-                "FROM friends " +
-                "WHERE (user_id = ? AND friend_id = ?) ";
-        log.info(getAllFriendsOfUserById(first).toString());
 
-        Integer count = jdbc.queryForObject(query, Integer.class, first, second);
+        Integer count = jdbc.queryForObject(QUERY_FOR_FRIEND, Integer.class, first, second);
         return count != null && count > 0;
 
     }

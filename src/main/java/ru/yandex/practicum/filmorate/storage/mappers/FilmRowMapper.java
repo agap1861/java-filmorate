@@ -10,17 +10,18 @@ import java.sql.SQLException;
 import java.time.Duration;
 
 import java.time.temporal.ChronoUnit;
+
 @Component
 public class FilmRowMapper implements RowMapper<Film> {
     @Override
     public Film mapRow(ResultSet rs, int rowNum) throws SQLException {
-        Film film  = new Film();
+        Film film = new Film();
         film.setId(rs.getLong("id"));
         film.setName(rs.getString("name"));
         film.setDescription(rs.getString("description"));
         film.setReleaseDate(rs.getDate("release_date").toLocalDate());
         film.setDuration(Duration.of(rs.getLong("duration"), ChronoUnit.MINUTES));
-        film.setMpa(new MPA(rs.getLong("mpa_id"),rs.getString("mpa_name")));
+        film.setMpa(new MPA(rs.getLong("mpa_id"), rs.getString("mpa_name")));
         return film;
 
     }

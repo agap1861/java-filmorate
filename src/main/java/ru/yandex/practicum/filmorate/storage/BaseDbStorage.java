@@ -8,8 +8,11 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import ru.yandex.practicum.filmorate.exception.InternalServerException;
 
 import java.sql.PreparedStatement;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 public class BaseDbStorage<T> {
@@ -35,7 +38,7 @@ public class BaseDbStorage<T> {
             PreparedStatement ps = connection
                     .prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS);
             for (int i = 0; i < params.length; i++) {
-                ps.setObject(i, params[i]);
+                ps.setObject(i + 1, params[i]);
             }
             return ps;
         }, generatedKeyHolder);
@@ -46,6 +49,33 @@ public class BaseDbStorage<T> {
             throw new InternalServerException("Unable to save data");
         }
 
+    }
+
+    protected void update(String query, Map<String, Object> fields, long id) {
+
+        String set = fields.keySet().stream()
+                .map(o -> o + " = ?")
+                .collect(Collectors.joining(", "));
+        String result = query + set + " WHERE id = ?";
+
+        List<Object> updates = new ArrayList<>(fields.values());
+        updates.add(id);
+
+
+        int rowsUpdated = jdbc.update(result, updates.toArray());
+        if (rowsUpdated == 0) {
+            throw new InternalServerException("Unable to update data");
+        }
+
+
+    }
+
+    protected void remove(String query, long id_1, long id_2) {
+        jdbc.update(query, id_1, id_2);
+    }
+
+    protected List<T> queryForLst(String query, long id) {
+        return jdbc.query(query, mapper, id);
     }
 
 
