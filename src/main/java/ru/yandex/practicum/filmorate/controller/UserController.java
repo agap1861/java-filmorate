@@ -67,6 +67,7 @@ public class UserController {
     public void addInFriends(@PathVariable long id, @PathVariable long friendId) {
 
         service.addInFriends(id, friendId);
+
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")

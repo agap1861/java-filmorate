@@ -26,6 +26,6 @@ public interface UserStorage {
 
     boolean isExistListOfFriends(long id);
 
-    boolean haveEachOtherAsFriends(long first, long second);
+    boolean haveUserFriend(long first, long second);
 
 }

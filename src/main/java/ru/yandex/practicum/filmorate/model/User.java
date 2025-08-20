@@ -1,10 +1,13 @@
 package ru.yandex.practicum.filmorate.model;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDate;
 
 @Data
+@NoArgsConstructor
 public class User {
     private Long id;
     private String email;
@@ -12,6 +15,7 @@ public class User {
     private String name;
     private LocalDate birthday;
 
+    @Autowired
     public User(Long id, String email, String login, String name, LocalDate birthday) {
         this.id = id;
         this.email = email;

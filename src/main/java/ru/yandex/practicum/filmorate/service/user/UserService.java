@@ -1,13 +1,14 @@
 package ru.yandex.practicum.filmorate.service.user;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import ru.yandex.practicum.filmorate.exception.DuplicateFriendException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
@@ -19,14 +20,19 @@ public class UserService {
 
     UserStorage storage;
 
-    public UserService(InMemoryUserStorage storage) {
+    public UserService(@Qualifier("userDbStorage") UserStorage storage) {
         this.storage = storage;
     }
 
     public void addInFriends(long userId, long friendId) {
 
         validateExistFriends(userId, friendId);
-        storage.addInFriends(userId, friendId);
+
+        if (storage.haveUserFriend(userId, friendId)) {
+            throw new DuplicateFriendException("These users already in friends list");
+        } else {
+            storage.addInFriends(userId, friendId);
+        }
 
 
     }
@@ -34,11 +40,11 @@ public class UserService {
     public void removeFromFriends(long userId, long friendId) {
 
         validateExistFriends(userId, friendId);
-        if (!storage.isExistListOfFriends(userId) || !storage.isExistListOfFriends(friendId)) {
+
+
+        if (!storage.haveUserFriend(userId, friendId)) {
             return;
-        }
-        if (!storage.haveEachOtherAsFriends(userId, friendId)) {
-            throw new NotFoundException("Not found");
+
         }
         storage.removeFriend(userId, friendId);
 
@@ -51,6 +57,7 @@ public class UserService {
         if (!storage.isExistListOfFriends(id)) {
             return List.of();
         }
+
 
         return storage.getAllFriendsOfUserById(id);
 
@@ -82,9 +89,11 @@ public class UserService {
     public User postUser(User user) {
         validateOfDataForPost(user);
         return storage.postUser(user);
+
     }
 
     public User putUser(User user) {
+        isExistUser(user.getId());
         validateOfDataForPut(user);
         return storage.putUser(user);
     }
@@ -131,6 +140,7 @@ public class UserService {
     private void validateExistFriends(long userId, long friendId) {
         if (!storage.exists(userId) || !storage.exists(friendId)) {
             throw new NotFoundException("Not found");
+
         }
     }
 

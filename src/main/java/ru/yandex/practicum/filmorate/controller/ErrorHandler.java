@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 
 
@@ -11,6 +12,7 @@ import ru.yandex.practicum.filmorate.exception.ValidationException;
 
 import java.util.Map;
 
+@Slf4j
 @RestControllerAdvice
 public class ErrorHandler {
 
@@ -18,6 +20,7 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public Map<String, String> handleNotFound(final NotFoundException e) {
+
         return Map.of("error", e.getMessage());
     }
 
