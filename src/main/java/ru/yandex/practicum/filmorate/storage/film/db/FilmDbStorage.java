@@ -21,6 +21,7 @@ import java.sql.Date;
 
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 @Slf4j
@@ -73,25 +74,22 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private static final String GET_ALL_MPA = "SELECT * FROM mpa ORDER BY id";
     private static final String GET_MPA_BY_ID = "SELECT * FROM mpa WHERE id = ?";
     private static final String ADD_IN_FILMS_GENRES = "INSERT INTO film_genres (film_id, genre_id) VALUES (?, ?) ";
+    private static final String EXIST = "SELECT EXISTS(SELECT 1 FROM films WHERE id = ?) ";
 
 
     public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper, GenreRowMapper genreMapper, MPARowMapper mpaMapper) {
         super(jdbc, mapper);
         this.genreMapper = genreMapper;
         this.mpaMapper = mpaMapper;
-
     }
 
     @Override
     public Collection<Film> getFilms() {
-
-
         return getAll(GET_ALL_FILMS);
     }
 
     @Override
     public Film postFilm(Film film) {
-
         long id = post(
                 INSERT_USER,
                 film.getName(),
@@ -105,8 +103,17 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             film.getGenres()
                     .forEach(genre ->
                             jdbc.update(ADD_IN_FILMS_GENRES, film.getId().intValue(), genre.getId().intValue()));
+
         }
         return film;
+    }
+
+    private void addInTableGenresAndFilms(long idFilm, List<Long> idsGenres) {
+        jdbc.batchUpdate(ADD_IN_FILMS_GENRES, idsGenres, idsGenres.size(),
+                (ps, genreId) -> {
+                    ps.setLong(1, idFilm);
+                    ps.setLong(2, genreId);
+                });
     }
 
     @Override
@@ -131,56 +138,42 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             throw new IllegalArgumentException();
         }
         update(UPDATE_FILM, fields, film.getId());
-
         return film;
-
     }
 
     @Override
     public Optional<Film> findFilmById(long id) {
-
         return getOneById(GET_FILM_BY_ID, id);
-
-
     }
 
     @Override
     public boolean addLike(long id, long idUser) {
-
         int rowsUpdate = jdbc.update(ADD_LIKE, id, idUser);
         return rowsUpdate != 0;
-
     }
 
     @Override
     public Set<Long> getFilmsLikes(long id) {
-
         return new HashSet<>(jdbc.queryForList(GET_LIKES_FOR_FILM, Long.class, id));
     }
 
     @Override
     public List<Film> getTopFilms(Integer count) {
-
-
         return queryForLst(GET_TOP_FILMS, count);
     }
 
     @Override
     public void removeLike(long idFilm, long idUser) {
         remove(REMOVE_LIKE, idFilm, idUser);
-
-
     }
 
     @Override
     public List<Genre> getAllGenres() {
-
         return jdbc.query(GET_ALL_GENRES, genreMapper);
     }
 
     @Override
     public Optional<Genre> getGenreById(long id) {
-
         try {
             Genre genre = jdbc.queryForObject(GET_GENRE_BY_ID, genreMapper, id);
             return Optional.ofNullable(genre);
@@ -191,13 +184,11 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     @Override
     public List<MPA> getAllMpa() {
-
         return jdbc.query(GET_ALL_MPA, mpaMapper);
     }
 
     @Override
     public Optional<MPA> getMpaById(long id) {
-
         try {
             MPA mpa = jdbc.queryForObject(GET_MPA_BY_ID, mpaMapper, id);
             return Optional.ofNullable(mpa);
@@ -206,5 +197,20 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         }
     }
 
+    @Override
+    public List<Genre> getGenresByIds(List<Long> ids) {
+        String pHolders = ids.stream()
+                .map(id -> "?")
+                .collect(Collectors.joining(", "));
+        String query = "SELECT * " +
+                "FROM genres " +
+                "WHERE id IN ( " +
+                pHolders + " )";
+        return jdbc.query(query, genreMapper, ids.toArray());
+    }
 
+    @Override
+    public boolean isExistFilmById(long id) {
+        return isExistById(EXIST, id);
+    }
 }

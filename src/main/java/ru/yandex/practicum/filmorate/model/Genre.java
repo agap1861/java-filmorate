@@ -2,10 +2,11 @@ package ru.yandex.practicum.filmorate.model;
 
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.Objects;
 
-
+@NoArgsConstructor
 @Data
 public class Genre {
     private Long id;
@@ -14,9 +15,6 @@ public class Genre {
     public Genre(Long id, String name) {
         this.id = id;
         this.name = name;
-    }
-
-    public Genre() {
     }
 
     @Override

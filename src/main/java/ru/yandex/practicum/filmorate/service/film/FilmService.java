@@ -20,6 +20,7 @@ import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 import java.time.LocalDate;
 import java.util.*;
 
+
 @Slf4j
 @Service
 public class FilmService {
@@ -85,34 +86,30 @@ public class FilmService {
             MPA mpa = filmStorage.getMpaById(film.getMpa().getId()).orElseThrow(() -> new NotFoundException("not found"));
             film.setMpa(mpa);
         }
-        if (film.getGenres() != null) {
+        if (film.getGenres() != null && !film.getGenres().isEmpty()) {
+            List<Long> idsGenres = film.getGenres().stream()
+                    .map(Genre::getId)
+                    .distinct()
+                    .toList();
 
-            Iterator<Genre> iterator = film.getGenres().iterator();
-            while (iterator.hasNext()) {
-                Genre genre = iterator.next();
-                Genre fullGenre = filmStorage.getGenreById(genre.getId()).orElseThrow(() -> new NotFoundException("not found"));
-                genre.setName(fullGenre.getName());
+            List<Genre> genres = filmStorage.getGenresByIds(idsGenres);
+            if (genres.size() != idsGenres.size()) {
+                throw new NotFoundException("nod found");
             }
-            List<Genre> unique = film.getGenres().stream().distinct().toList();
-            film.setGenres(unique);
+            film.setGenres(genres);
 
         } else {
             film.setGenres(List.of());
         }
-
-
     }
 
     public Film postFilm(Film film) {
         validateOfData(film);
-
         return filmStorage.postFilm(film);
-
-
     }
 
     public Film putFilm(Film film) {
-        if (filmStorage.findFilmById(film.getId()).isEmpty()) {
+        if (!filmStorage.isExistFilmById(film.getId())) {
             throw new NotFoundException("not found");
         }
         validateOfData(film);

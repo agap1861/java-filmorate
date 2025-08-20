@@ -5,7 +5,7 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
-import ru.yandex.practicum.filmorate.exception.InternalServerException;
+import ru.yandex.practicum.filmorate.exception.BadInsertException;
 
 import java.sql.PreparedStatement;
 import java.util.ArrayList;
@@ -46,25 +46,20 @@ public class BaseDbStorage<T> {
         if (id != null) {
             return id.longValue();
         } else {
-            throw new InternalServerException("Unable to save data");
+            throw new BadInsertException("Unable to save data");
         }
-
     }
 
     protected void update(String query, Map<String, Object> fields, long id) {
-
         String set = fields.keySet().stream()
                 .map(o -> o + " = ?")
                 .collect(Collectors.joining(", "));
         String result = query + set + " WHERE id = ?";
-
         List<Object> updates = new ArrayList<>(fields.values());
         updates.add(id);
-
-
         int rowsUpdated = jdbc.update(result, updates.toArray());
         if (rowsUpdated == 0) {
-            throw new InternalServerException("Unable to update data");
+            throw new BadInsertException("Unable to update data");
         }
 
 
@@ -76,6 +71,12 @@ public class BaseDbStorage<T> {
 
     protected List<T> queryForLst(String query, long id) {
         return jdbc.query(query, mapper, id);
+    }
+
+    protected boolean isExistById(String query, long id) {
+        Integer count = jdbc.queryForObject(query, Integer.class, id);
+        return count != null && count > 0;
+
     }
 
 

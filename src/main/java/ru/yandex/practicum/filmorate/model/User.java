@@ -1,22 +1,19 @@
 package ru.yandex.practicum.filmorate.model;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDate;
 
 @Data
+@NoArgsConstructor
 public class User {
     private Long id;
     private String email;
     private String login;
     private String name;
     private LocalDate birthday;
-
-    public User() {
-    }
-
-    ;
 
     @Autowired
     public User(Long id, String email, String login, String name, LocalDate birthday) {

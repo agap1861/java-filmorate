@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.model;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 
 import java.time.Duration;
@@ -11,6 +12,7 @@ import java.util.List;
 
 
 @Data
+@NoArgsConstructor
 public class Film {
     private Long id;
     private String name;
@@ -20,7 +22,6 @@ public class Film {
     private MPA mpa;
     private List<Genre> genres;
 
-
     public Film(Long id, String name, String description, LocalDate releaseDate, Duration duration) {
         this.id = id;
         this.name = name;
@@ -28,11 +29,6 @@ public class Film {
         this.releaseDate = releaseDate;
         this.duration = duration;
     }
-
-    public Film() {
-    }
-
-    ;
 
     @JsonGetter("duration")
     public long getDurationInMinutes() {

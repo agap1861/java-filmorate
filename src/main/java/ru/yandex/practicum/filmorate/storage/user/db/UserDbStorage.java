@@ -31,7 +31,7 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
             "FROM users AS u " +
             "INNER JOIN friends AS f ON f.friend_id = u.id " +
             "WHERE f.user_id = ?";
-    private static final String EXIST = "SELECT COUNT(*) FROM users WHERE id = ?";
+    private static final String EXIST = "SELECT EXISTS(SELECT 1 FROM users WHERE id = ?) ";
     private static final String ADD_IN_FRIEND = "INSERT INTO friends (user_id,friend_id) VALUES (?, ?)";
     private static final String GET_COMMON_FRIENDS = "SELECT * " +
             "FROM users AS u " +
@@ -43,7 +43,6 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
     private static final String QUERY_FOR_FRIEND = "SELECT COUNT(*) " +
             "FROM friends " +
             "WHERE (user_id = ? AND friend_id = ?) ";
-
 
     public UserDbStorage(JdbcTemplate jdbc, RowMapper<User> mapper) {
         super(jdbc, mapper);
@@ -65,13 +64,11 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
                 Date.valueOf(user.getBirthday()));
         user.setId(id);
         return user;
-
     }
 
     @Override
     public User putUser(User user) {
         Map<String, Object> fields = new LinkedHashMap<>();
-
         if (user.getName() != null) {
             fields.put("name", user.getName());
         }
@@ -89,9 +86,7 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
             throw new IllegalArgumentException();
         }
         update(UPDATE_USER, fields, user.getId());
-
         return user;
-
     }
 
     @Override
@@ -102,8 +97,7 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
 
     @Override
     public boolean exists(long id) {
-        Integer count = jdbc.queryForObject(EXIST, Integer.class, id);
-        return count != null && count > 0;
+        return isExistById(EXIST, id);
     }
 
     @Override
@@ -132,18 +126,14 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
 
     @Override
     public boolean isExistListOfFriends(long id) {
-
         Integer count = jdbc.queryForObject(GET_LIST_FRIENDS, Integer.class, id);
         return count != null && count > 0;
-
     }
 
     @Override
     public boolean haveUserFriend(long first, long second) {
-
         Integer count = jdbc.queryForObject(QUERY_FOR_FRIEND, Integer.class, first, second);
         return count != null && count > 0;
-
     }
 
 

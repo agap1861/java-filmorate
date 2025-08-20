@@ -32,4 +32,7 @@ public interface FilmStorage {
     Optional<MPA> getMpaById(long id);
 
 
+    List<Genre> getGenresByIds(List<Long> ids);
+
+    boolean isExistFilmById(long id);
 }

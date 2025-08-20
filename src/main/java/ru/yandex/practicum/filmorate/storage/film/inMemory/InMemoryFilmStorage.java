@@ -114,4 +114,14 @@ public class InMemoryFilmStorage implements FilmStorage {
     public Optional<MPA> getMpaById(long id) {
         return Optional.empty();
     }
+
+    @Override
+    public List<Genre> getGenresByIds(List<Long> ids) {
+        return List.of();
+    }
+
+    @Override
+    public boolean isExistFilmById(long id) {
+        return false;
+    }
 }
