@@ -1,12 +1,14 @@
-package ru.yandex.practicum.filmorate.storage.user;
+package ru.yandex.practicum.filmorate.storage.user.InMemory;
 
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Component;
 
 
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 
 import java.util.*;
@@ -119,8 +121,23 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public boolean haveEachOtherAsFriends(long first, long second) {
+    public boolean haveUserFriend(long first, long second) {
         return friends.get(first).contains(second) && friends.get(second).contains(first);
     }
+
+/*    @Override
+    public boolean isHaveUserRequestFromOtherUser(long userId, long friend_id) {
+        return false;
+    }
+
+    @Override
+    public void createRequestInFriend(long userId, long friendId) {
+
+    }
+
+    @Override
+    public List<User> getAllRequestById(long id) {
+        return List.of();
+    }*/
 
 }
