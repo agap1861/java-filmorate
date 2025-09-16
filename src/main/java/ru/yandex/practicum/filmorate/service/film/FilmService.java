@@ -179,7 +179,7 @@ public class FilmService {
         return mpa;
     }
 
-    public List<Film> getAllFilmsByDirectorSortByYear(long id ) {
+    public List<Film> getAllFilmsByDirectorSortByYear(long id) {
         if (directorStorage.isExistDirectorById(id)) {
             return filmStorage.getAllFilmsByDirectorSortByYear(id);
         } else {
@@ -194,10 +194,10 @@ public class FilmService {
             } else {
                 return null;
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             log.info(e.getMessage());
         }
-     return null;
+        return null;
     }
 
 

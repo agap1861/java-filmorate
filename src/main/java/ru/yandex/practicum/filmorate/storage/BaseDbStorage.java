@@ -78,10 +78,10 @@ public class BaseDbStorage<T> {
         return count != null && count > 0;
 
     }
-    protected void delete(String query,long id){
-        jdbc.update(query,id);
-    }
 
+    protected void delete(String query, long id) {
+        jdbc.update(query, id);
+    }
 
 
 }
