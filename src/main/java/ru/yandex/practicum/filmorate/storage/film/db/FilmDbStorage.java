@@ -111,7 +111,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             "WHERE d.id = ? " +
             "GROUP BY f.id " +
             "ORDER BY COUNT(fl.user_id) DESC ";
-    String ADD_LIKE = "INSERT INTO films_like (film_id,user_id) VALUES (?, ?)";
+    private static final String ADD_LIKE = "INSERT INTO films_like (film_id,user_id) VALUES (?, ?)";
     private static final String GET_LIKES_FOR_FILM = "SELECT user_id FROM films_like WHERE film_id = ?";
     private static final String GET_ALL_GENRES = "SELECT * FROM genres ORDER BY id";
     private static final String GET_GENRE_BY_ID = "SELECT * FROM genres WHERE id = ?";
