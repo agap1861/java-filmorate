@@ -16,12 +16,12 @@ import java.util.stream.Collectors;
 public class DirectorDbStorage extends BaseDbStorage<Director> implements DirectorStorage {
 
 
-    private final static String GET_ALL_DIRECTORS = "SELECT * FROM directors";
-    private final static String GET_DIRECTOR_BY_ID = "SELECT * FROM directors WHERE id = ?";
-    private final static String INSERT_DIRECTOR = "INSERT INTO directors (name) VALUES (?)";
-    private final static String UPDATE_DIRECTOR = "UPDATE directors SET ";
-    private final static String DELETE_DIRECTOR = "DELETE FROM directors WHERE id = ? ";
-    private final static String DELETE_DIRECTOR_RELATIONS = "DELETE FROM films_directors WHERE director_id = ? ";
+    private static final String GET_ALL_DIRECTORS = "SELECT * FROM directors";
+    private static final String GET_DIRECTOR_BY_ID = "SELECT * FROM directors WHERE id = ?";
+    private static final String INSERT_DIRECTOR = "INSERT INTO directors (name) VALUES (?)";
+    private static final String UPDATE_DIRECTOR = "UPDATE directors SET ";
+    private static final String DELETE_DIRECTOR = "DELETE FROM directors WHERE id = ? ";
+    private static final String DELETE_DIRECTOR_RELATIONS = "DELETE FROM films_directors WHERE director_id = ? ";
     private static final String EXIST = "SELECT EXISTS(SELECT 1 FROM directors WHERE id = ?) ";
 
     public DirectorDbStorage(JdbcTemplate jdbc, RowMapper<Director> mapper) {
