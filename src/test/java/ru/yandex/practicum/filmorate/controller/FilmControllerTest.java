@@ -21,10 +21,10 @@ import java.util.stream.Stream;
 class FilmControllerTest {
     FilmService service;
 
-    @BeforeEach
+/*    @BeforeEach
     public void createController() {
         service = new FilmService(new InMemoryFilmStorage(), new InMemoryUserStorage());
-    }
+    }*/
 
 
     @ParameterizedTest

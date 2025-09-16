@@ -9,9 +9,11 @@ import org.springframework.util.StringUtils;
 
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MPA;
+import ru.yandex.practicum.filmorate.storage.director.DirectorStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
@@ -27,11 +29,15 @@ public class FilmService {
 
     private FilmStorage filmStorage;
     private UserStorage userStorage;
+    private DirectorStorage directorStorage;
+
 
     @Autowired
-    public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage, @Qualifier("userDbStorage") UserStorage userStorage) {
+    public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage,
+                       @Qualifier("userDbStorage") UserStorage userStorage, DirectorStorage directorStorage) {
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
+        this.directorStorage = directorStorage;
     }
 
     public void addLike(long idFilm, long idUser) {
@@ -87,6 +93,7 @@ public class FilmService {
             film.setMpa(mpa);
         }
         if (film.getGenres() != null && !film.getGenres().isEmpty()) {
+
             List<Long> idsGenres = film.getGenres().stream()
                     .map(Genre::getId)
                     .distinct()
@@ -101,6 +108,20 @@ public class FilmService {
         } else {
             film.setGenres(List.of());
         }
+        if (film.getDirectors() != null && !film.getDirectors().isEmpty()) {
+            List<Long> idsDirectors = film.getDirectors().stream()
+                    .map(Director::getId)
+                    .distinct()
+                    .toList();
+            List<Director> directors = directorStorage.getDirectorsByIds(idsDirectors);
+            if (directors.size() != idsDirectors.size()) {
+                throw new NotFoundException("not found");
+            }
+            film.setDirectors(directors);
+        } else {
+            film.setDirectors(List.of());
+        }
+
     }
 
     public Film postFilm(Film film) {
@@ -156,6 +177,27 @@ public class FilmService {
     public MPA getMpaById(long id) {
         MPA mpa = filmStorage.getMpaById(id).orElseThrow(() -> new NotFoundException("not found"));
         return mpa;
+    }
+
+    public List<Film> getAllFilmsByDirectorSortByYear(long id ) {
+        if (directorStorage.isExistDirectorById(id)) {
+            return filmStorage.getAllFilmsByDirectorSortByYear(id);
+        } else {
+            return null;
+        }
+    }
+
+    public List<Film> getAllFilmsByDirectorSortByLikes(long id) {
+        try {
+            if (directorStorage.isExistDirectorById(id)) {
+                return filmStorage.getAllFilmsByDirectorSortByLikes(id);
+            } else {
+                return null;
+            }
+        }catch (Exception e){
+            log.info(e.getMessage());
+        }
+     return null;
     }
 
 

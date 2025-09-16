@@ -35,4 +35,8 @@ public interface FilmStorage {
     List<Genre> getGenresByIds(List<Long> ids);
 
     boolean isExistFilmById(long id);
+
+    List<Film> getAllFilmsByDirectorSortByYear(long id);
+
+    List<Film> getAllFilmsByDirectorSortByLikes(long id);
 }

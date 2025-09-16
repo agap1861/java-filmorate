@@ -13,6 +13,7 @@ import ru.yandex.practicum.filmorate.service.film.FilmService;
 
 
 import java.util.Collection;
+import java.util.List;
 
 
 @Slf4j
@@ -48,6 +49,15 @@ public class FilmController {
     public Collection<Film> getTopFilms(@RequestParam Integer count) {
         return service.getTopCountFilms(count);
 
+    }
+
+    @GetMapping("/director/{directorId}")
+    public List<Film> getAllFilmsByDirectorSortBy(@PathVariable long directorId, @RequestParam String sortBy) {
+        if (sortBy.equals("year")) {
+            return service.getAllFilmsByDirectorSortByYear(directorId);
+        } else {
+            return service.getAllFilmsByDirectorSortByLikes(directorId);
+        }
     }
 
     @PostMapping

@@ -35,11 +35,15 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private static final String GET_ALL_FILMS = "SELECT f.id, f.name, f.description, f.release_date, f.duration, " +
             "f.mpa_id, m.name AS mpa_name, " +
             "GROUP_CONCAT(g.id) AS genres_id, " +
-            "GROUP_CONCAT(g.name) AS genre_names " +
+            "GROUP_CONCAT(g.name) AS genre_names, " +
+            "GROUP_CONCAT(d.id) AS directors_id, " +
+            "GROUP_CONCAT(d.name) AS director_names " +
             "FROM films AS f " +
             "INNER JOIN  mpa AS m ON m.id=f.mpa_id " +
             "LEFT JOIN film_genres AS fg ON fg.film_id = f.id " +
             "LEFT JOIN genres AS g ON g.id = fg.genre_id " +
+            "LEFT JOIN films_directors AS fd ON fd.film_id = f.id " +
+            "LEFT JOIN directors AS d ON d.id = fd.director_id " +
             "GROUP BY f.id";
     private static final String INSERT_USER = "INSERT INTO films (name,description,release_date,duration,mpa_id)" +
             " VALUES (?, ?, ?, ?, ?)";
@@ -47,27 +51,67 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private static final String GET_FILM_BY_ID = "SELECT f.id, f.name, f.description, f.release_date, f.duration, " +
             "f.mpa_id, m.name AS mpa_name, " +
             "GROUP_CONCAT(g.id) AS genres_id, " +
-            "GROUP_CONCAT(g.name) AS genre_names " +
+            "GROUP_CONCAT(g.name) AS genre_names, " +
+            "GROUP_CONCAT(d.id) AS directors_id, " +
+            "GROUP_CONCAT(d.name) AS director_names " +
             "FROM films AS f " +
             "INNER JOIN  mpa AS m ON m.id=f.mpa_id " +
             "LEFT JOIN film_genres AS fg ON fg.film_id = f.id " +
             "LEFT JOIN genres AS g ON g.id = fg.genre_id " +
+            "LEFT JOIN films_directors AS fd ON fd.film_id = f.id " +
+            "LEFT JOIN directors AS d ON d.id = fd.director_id " +
             "WHERE f.id = ? " +
             "GROUP BY f.id";
     private static final String REMOVE_LIKE = "DELETE FROM films_like WHERE film_id = ? AND user_id = ?";
     private static final String GET_TOP_FILMS = "SELECT f.id, f.name, f.description, f.release_date, f.duration, " +
             "f.mpa_id, m.name AS mpa_name, " +
             "GROUP_CONCAT(g.id) AS genres_id, " +
-            "GROUP_CONCAT(g.name) AS genre_names " +
+            "GROUP_CONCAT(g.name) AS genre_names, " +
+            "GROUP_CONCAT(d.id) AS directors_id, " +
+            "GROUP_CONCAT(d.name) AS director_names " +
             "FROM films AS f " +
             "LEFT OUTER JOIN films_like as fl ON fl.film_id = f.id " +
             "INNER JOIN  mpa AS m ON m.id=f.mpa_id " +
             "LEFT JOIN film_genres AS fg ON fg.film_id = f.id " +
             "LEFT JOIN genres AS g ON g.id = fg.genre_id " +
+            "LEFT JOIN films_directors AS fd ON fd.film_id = f.id " +
+            "LEFT JOIN directors AS d ON d.id = fd.director_id " +
             "GROUP BY f.id " +
             "ORDER BY COUNT(fl.user_id) DESC " +
             "LIMIT ? ";
-    private static final String ADD_LIKE = "INSERT INTO films_like (film_id,user_id) VALUES (?, ?)";
+    private static final String GET_FILMS_BY_DIRECTOR_SORT_BY_YEAR = "SELECT f.id, f.name, f.description, f.release_date, f.duration, " +
+            "f.mpa_id, m.name AS mpa_name, " +
+            "GROUP_CONCAT(g.id) AS genres_id, " +
+            "GROUP_CONCAT(g.name) AS genre_names, " +
+            "GROUP_CONCAT(d.id) AS directors_id, " +
+            "GROUP_CONCAT(d.name) AS director_names " +
+            "FROM films AS f " +
+            "INNER JOIN  mpa AS m ON m.id=f.mpa_id " +
+            "LEFT JOIN film_genres AS fg ON fg.film_id = f.id " +
+            "LEFT JOIN genres AS g ON g.id = fg.genre_id " +
+            "LEFT JOIN films_directors AS fd ON fd.film_id = f.id " +
+            "LEFT JOIN directors AS d ON d.id = fd.director_id " +
+            "WHERE d.id = ? " +
+            "GROUP BY f.id " +
+            "ORDER BY f.release_date ASC ";
+
+    private static final String GET_FILMS_BY_DIRECTOR_SORT_BY_LIKE = "SELECT f.id, f.name, f.description, f.release_date, f.duration, " +
+            "f.mpa_id, m.name AS mpa_name, " +
+            "GROUP_CONCAT(g.id) AS genres_id, " +
+            "GROUP_CONCAT(g.name) AS genre_names, " +
+            "GROUP_CONCAT(d.id) AS directors_id, " +
+            "GROUP_CONCAT(d.name) AS director_names " +
+            "FROM films AS f " +
+            "LEFT OUTER JOIN films_like as fl ON fl.film_id = f.id " +
+            "INNER JOIN  mpa AS m ON m.id=f.mpa_id " +
+            "LEFT JOIN film_genres AS fg ON fg.film_id = f.id " +
+            "LEFT JOIN genres AS g ON g.id = fg.genre_id " +
+            "LEFT JOIN films_directors AS fd ON fd.film_id = f.id " +
+            "LEFT JOIN directors AS d ON d.id = fd.director_id " +
+            "WHERE d.id = ? " +
+            "GROUP BY f.id " +
+            "ORDER BY COUNT(fl.user_id) DESC ";
+    String ADD_LIKE = "INSERT INTO films_like (film_id,user_id) VALUES (?, ?)";
     private static final String GET_LIKES_FOR_FILM = "SELECT user_id FROM films_like WHERE film_id = ?";
     private static final String GET_ALL_GENRES = "SELECT * FROM genres ORDER BY id";
     private static final String GET_GENRE_BY_ID = "SELECT * FROM genres WHERE id = ?";
@@ -75,6 +119,8 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private static final String GET_MPA_BY_ID = "SELECT * FROM mpa WHERE id = ?";
     private static final String ADD_IN_FILMS_GENRES = "INSERT INTO film_genres (film_id, genre_id) VALUES (?, ?) ";
     private static final String EXIST = "SELECT EXISTS(SELECT 1 FROM films WHERE id = ?) ";
+    private static final String ADD_IN_FILMS_DIRECTOR = "INSERT INTO films_directors (film_id, director_id) VALUES (?, ?) ";
+    private static final String DELETE_DIRECTORS = "DELETE FROM films_directors WHERE film_id = ? ";
 
 
     public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper, GenreRowMapper genreMapper, MPARowMapper mpaMapper) {
@@ -105,6 +151,12 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                             jdbc.update(ADD_IN_FILMS_GENRES, film.getId().intValue(), genre.getId().intValue()));
 
         }
+        if (film.getDirectors() != null && !film.getDirectors().isEmpty()) {
+            film.getDirectors()
+                    .forEach(director ->
+                            jdbc.update(ADD_IN_FILMS_DIRECTOR, film.getId().intValue(), director.getId().intValue()));
+        }
+
         return film;
     }
 
@@ -138,6 +190,13 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             throw new IllegalArgumentException();
         }
         update(UPDATE_FILM, fields, film.getId());
+        if (film.getDirectors() != null && !film.getDirectors().isEmpty()) {
+            delete(DELETE_DIRECTORS,film.getId());
+
+            film.getDirectors().forEach( director ->
+                    jdbc.update(ADD_IN_FILMS_DIRECTOR,film.getId(),director.getId())
+            );
+        }
         return film;
     }
 
@@ -212,5 +271,15 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     @Override
     public boolean isExistFilmById(long id) {
         return isExistById(EXIST, id);
+    }
+
+    @Override
+    public List<Film> getAllFilmsByDirectorSortByYear(long id) {
+        return queryForLst(GET_FILMS_BY_DIRECTOR_SORT_BY_YEAR, id);
+    }
+
+    @Override
+    public List<Film> getAllFilmsByDirectorSortByLikes(long id) {
+        return queryForLst(GET_FILMS_BY_DIRECTOR_SORT_BY_LIKE, id);
     }
 }
