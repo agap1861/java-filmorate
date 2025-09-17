@@ -98,6 +98,11 @@ public class UserService {
         return storage.putUser(user);
     }
 
+    public void removeUser(long userId) {
+        isExistUser(userId);
+        storage.removeUser(userId);
+    }
+
     public void validateOfDataForPost(User user) {
 
         if (!StringUtils.hasText(user.getEmail()) || !user.getEmail().contains("@")) {

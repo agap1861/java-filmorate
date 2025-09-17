@@ -41,7 +41,6 @@ public class UserController {
 
     @GetMapping("/{id}/friends")
     public List<User> getAllFriendsOfUserById(@PathVariable long id) {
-
         return service.getAllFriendsOfUSerById(id);
     }
 
@@ -61,6 +60,11 @@ public class UserController {
         return service.putUser(user);
 
 
+    }
+
+    @DeleteMapping("/{id}")
+    public void removeUser(@PathVariable long id){
+        service.removeUser(id);
     }
 
     @PutMapping("/{id}/friends/{friendId}")

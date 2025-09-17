@@ -27,6 +27,8 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
     private static final String UPDATE_USER = "UPDATE users SET ";
     private static final String GET_USER_BY_ID = "SELECT * FROM users WHERE id = ?";
     private static final String REMOVE_USER_BY_ID = "DELETE FROM friends WHERE (user_id = ? AND friend_id = ?) ";
+    private static final String REMOVE_USER = "DELETE FROM users WHERE id = ?";
+
     private static final String GET_ALL_FRIENDS_BY_ID = "SELECT * " +
             "FROM users AS u " +
             "INNER JOIN friends AS f ON f.friend_id = u.id " +
@@ -87,6 +89,11 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
         }
         update(UPDATE_USER, fields, user.getId());
         return user;
+    }
+
+    @Override
+    public void removeUser(long userId) {
+        delete(REMOVE_USER, userId);
     }
 
     @Override

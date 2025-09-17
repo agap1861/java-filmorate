@@ -63,6 +63,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             "WHERE f.id = ? " +
             "GROUP BY f.id";
     private static final String REMOVE_LIKE = "DELETE FROM films_like WHERE film_id = ? AND user_id = ?";
+    private static final String REMOVE_FILM = "DELETE FROM films WHERE id = ?";
     private static final String GET_TOP_FILMS = "SELECT f.id, f.name, f.description, f.release_date, f.duration, " +
             "f.mpa_id, m.name AS mpa_name, " +
             "GROUP_CONCAT(g.id) AS genres_id, " +
@@ -198,6 +199,11 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             );
         }
         return film;
+    }
+
+    @Override
+    public void removeFilm(long filmId) {
+        delete(REMOVE_FILM, filmId);
     }
 
     @Override

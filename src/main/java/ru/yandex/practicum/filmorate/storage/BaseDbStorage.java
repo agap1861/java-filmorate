@@ -69,6 +69,10 @@ public class BaseDbStorage<T> {
         jdbc.update(query, id_1, id_2);
     }
 
+    protected void delete(String query, Object... params) {
+        jdbc.update(query, params);
+    }
+
     protected List<T> queryForLst(String query, long id) {
         return jdbc.query(query, mapper, id);
     }

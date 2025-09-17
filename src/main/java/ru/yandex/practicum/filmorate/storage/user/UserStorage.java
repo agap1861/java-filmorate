@@ -12,6 +12,8 @@ public interface UserStorage {
 
     User putUser(User user);
 
+    void removeUser(long userId);
+
     Optional<User> getUserById(long id);
 
     boolean exists(long id);
