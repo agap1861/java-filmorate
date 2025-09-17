@@ -79,5 +79,9 @@ public class BaseDbStorage<T> {
 
     }
 
+    protected void delete(String query, long id) {
+        jdbc.update(query, id);
+    }
+
 
 }

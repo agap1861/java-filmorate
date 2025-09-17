@@ -124,4 +124,14 @@ public class InMemoryFilmStorage implements FilmStorage {
     public boolean isExistFilmById(long id) {
         return false;
     }
+
+    @Override
+    public List<Film> getAllFilmsByDirectorSortByYear(long id) {
+        return List.of();
+    }
+
+    @Override
+    public List<Film> getAllFilmsByDirectorSortByLikes(long id) {
+        return List.of();
+    }
 }
