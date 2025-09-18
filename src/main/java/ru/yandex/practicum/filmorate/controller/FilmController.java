@@ -70,6 +70,11 @@ public class FilmController {
         return service.putFilm(film);
     }
 
+    @DeleteMapping("/{id}")
+    public void removeFilm(@PathVariable long id) {
+        service.removeFilm(id);
+    }
+
     @PutMapping("/{id}/like/{userId}")
     public void addLike(@PathVariable long id, @PathVariable long userId) {
         service.addLike(id, userId);

@@ -142,6 +142,12 @@ public class FilmService {
         return filmStorage.putFilm(film);
     }
 
+    public void removeFilm(long filmId) {
+        filmStorage.findFilmById(filmId)
+                .orElseThrow(() -> new NotFoundException("Not found"));
+        filmStorage.removeFilm(filmId);
+    }
+
     public Collection<Film> getFilms() {
         return filmStorage.getFilms();
     }

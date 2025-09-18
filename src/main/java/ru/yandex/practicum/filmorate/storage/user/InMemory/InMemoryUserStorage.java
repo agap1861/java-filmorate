@@ -65,6 +65,11 @@ public class InMemoryUserStorage implements UserStorage {
         return oldVersion;
     }
 
+    @Override
+    public void removeUser(long id) {
+
+    }
+
 
     @Override
     public Optional<User> getUserById(long id) {

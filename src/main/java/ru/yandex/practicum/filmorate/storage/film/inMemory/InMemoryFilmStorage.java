@@ -60,6 +60,9 @@ public class InMemoryFilmStorage implements FilmStorage {
         return oldVersion;
     }
 
+    @Override
+    public void removeFilm(long filmId) {
+    }
 
     @Override
     public Optional<Film> findFilmById(long id) {
