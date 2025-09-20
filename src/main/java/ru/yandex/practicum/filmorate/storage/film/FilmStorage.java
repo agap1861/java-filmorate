@@ -23,6 +23,12 @@ public interface FilmStorage {
 
     List<Film> getTopFilms(Integer count);
 
+    List<Film> getTopFilmsByGenreAndYear(Integer count, Integer genreId, Integer year);
+
+    List<Film> getTopFilmsByGenre(Integer count, Integer genreId);
+
+    List<Film> getTopFilmsByYear(Integer count, Integer year);
+
     void removeLike(long idFilm, long idUser);
 
     List<Genre> getAllGenres();

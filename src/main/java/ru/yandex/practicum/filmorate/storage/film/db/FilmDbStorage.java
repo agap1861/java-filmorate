@@ -64,7 +64,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             "GROUP BY f.id";
     private static final String REMOVE_LIKE = "DELETE FROM films_like WHERE film_id = ? AND user_id = ?";
     private static final String REMOVE_FILM = "DELETE FROM films WHERE id = ?";
-    private static final String GET_TOP_FILMS = "SELECT f.id, f.name, f.description, f.release_date, f.duration, " +
+    private static final String GET_TOP_FILMS_LIMITED = "SELECT f.id, f.name, f.description, f.release_date, f.duration, " +
             "f.mpa_id, m.name AS mpa_name, " +
             "GROUP_CONCAT(g.id) AS genres_id, " +
             "GROUP_CONCAT(g.name) AS genre_names, " +
@@ -77,6 +77,57 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             "LEFT JOIN genres AS g ON g.id = fg.genre_id " +
             "LEFT JOIN films_directors AS fd ON fd.film_id = f.id " +
             "LEFT JOIN directors AS d ON d.id = fd.director_id " +
+            "GROUP BY f.id " +
+            "ORDER BY COUNT(fl.user_id) DESC " +
+            "LIMIT ? ";
+    private static final String GET_TOP_FILMS_BY_GENRE_AND_YEAR_LIMITED = "SELECT f.id, f.name, f.description, f.release_date, f.duration, " +
+            "f.mpa_id, m.name AS mpa_name, " +
+            "GROUP_CONCAT(g.id) AS genres_id, " +
+            "GROUP_CONCAT(g.name) AS genre_names, " +
+            "GROUP_CONCAT(d.id) AS directors_id, " +
+            "GROUP_CONCAT(d.name) AS director_names " +
+            "FROM films AS f " +
+            "LEFT OUTER JOIN films_like as fl ON fl.film_id = f.id " +
+            "INNER JOIN  mpa AS m ON m.id=f.mpa_id " +
+            "LEFT JOIN film_genres AS fg ON fg.film_id = f.id " +
+            "LEFT JOIN genres AS g ON g.id = fg.genre_id " +
+            "LEFT JOIN films_directors AS fd ON fd.film_id = f.id " +
+            "LEFT JOIN directors AS d ON d.id = fd.director_id " +
+            "WHERE g.id = ? AND EXTRACT(YEAR FROM f.release_date) = ? " +
+            "GROUP BY f.id " +
+            "ORDER BY COUNT(fl.user_id) DESC " +
+            "LIMIT ? ";
+    private static final String GET_TOP_FILMS_BY_YEAR_LIMITED = "SELECT f.id, f.name, f.description, f.release_date, f.duration, " +
+            "f.mpa_id, m.name AS mpa_name, " +
+            "GROUP_CONCAT(g.id) AS genres_id, " +
+            "GROUP_CONCAT(g.name) AS genre_names, " +
+            "GROUP_CONCAT(d.id) AS directors_id, " +
+            "GROUP_CONCAT(d.name) AS director_names " +
+            "FROM films AS f " +
+            "LEFT OUTER JOIN films_like as fl ON fl.film_id = f.id " +
+            "INNER JOIN  mpa AS m ON m.id=f.mpa_id " +
+            "LEFT JOIN film_genres AS fg ON fg.film_id = f.id " +
+            "LEFT JOIN genres AS g ON g.id = fg.genre_id " +
+            "LEFT JOIN films_directors AS fd ON fd.film_id = f.id " +
+            "LEFT JOIN directors AS d ON d.id = fd.director_id " +
+            "WHERE EXTRACT(YEAR FROM f.release_date) = ? " +
+            "GROUP BY f.id " +
+            "ORDER BY COUNT(fl.user_id) DESC " +
+            "LIMIT ? ";
+    private static final String GET_TOP_FILMS_BY_GENRE_LIMITED = "SELECT f.id, f.name, f.description, f.release_date, f.duration, " +
+            "f.mpa_id, m.name AS mpa_name, " +
+            "GROUP_CONCAT(g.id) AS genres_id, " +
+            "GROUP_CONCAT(g.name) AS genre_names, " +
+            "GROUP_CONCAT(d.id) AS directors_id, " +
+            "GROUP_CONCAT(d.name) AS director_names " +
+            "FROM films AS f " +
+            "LEFT OUTER JOIN films_like as fl ON fl.film_id = f.id " +
+            "INNER JOIN  mpa AS m ON m.id=f.mpa_id " +
+            "LEFT JOIN film_genres AS fg ON fg.film_id = f.id " +
+            "LEFT JOIN genres AS g ON g.id = fg.genre_id " +
+            "LEFT JOIN films_directors AS fd ON fd.film_id = f.id " +
+            "LEFT JOIN directors AS d ON d.id = fd.director_id " +
+            "WHERE g.id = ? " +
             "GROUP BY f.id " +
             "ORDER BY COUNT(fl.user_id) DESC " +
             "LIMIT ? ";
@@ -95,7 +146,6 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             "WHERE d.id = ? " +
             "GROUP BY f.id " +
             "ORDER BY f.release_date ASC ";
-
     private static final String GET_FILMS_BY_DIRECTOR_SORT_BY_LIKE = "SELECT f.id, f.name, f.description, f.release_date, f.duration, " +
             "f.mpa_id, m.name AS mpa_name, " +
             "GROUP_CONCAT(g.id) AS genres_id, " +
@@ -224,7 +274,22 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     @Override
     public List<Film> getTopFilms(Integer count) {
-        return queryForLst(GET_TOP_FILMS, count);
+        return queryForLst(GET_TOP_FILMS_LIMITED, count);
+    }
+
+    @Override
+    public List<Film> getTopFilmsByGenreAndYear(Integer count, Integer genreId, Integer year) {
+        return getAll(GET_TOP_FILMS_BY_GENRE_AND_YEAR_LIMITED, genreId, year, count);
+    }
+
+    @Override
+    public List<Film> getTopFilmsByGenre(Integer count, Integer genreId) {
+        return getAll(GET_TOP_FILMS_BY_GENRE_LIMITED, genreId, count);
+    }
+
+    @Override
+    public List<Film> getTopFilmsByYear(Integer count, Integer year) {
+        return getAll(GET_TOP_FILMS_BY_YEAR_LIMITED, year, count);
     }
 
     @Override

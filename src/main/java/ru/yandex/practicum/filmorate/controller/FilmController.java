@@ -14,6 +14,7 @@ import ru.yandex.practicum.filmorate.service.film.FilmService;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 
 @Slf4j
@@ -46,9 +47,8 @@ public class FilmController {
     }
 
     @GetMapping("/popular")
-    public Collection<Film> getTopFilms(@RequestParam Integer count) {
-        return service.getTopCountFilms(count);
-
+    public Collection<Film> getTopFilms(@RequestParam Optional<Integer> count, @RequestParam Optional<Integer> genreId, @RequestParam Optional<Integer> year) {
+        return service.getTopCountFilms(count, genreId, year);
     }
 
     @GetMapping("/director/{directorId}")

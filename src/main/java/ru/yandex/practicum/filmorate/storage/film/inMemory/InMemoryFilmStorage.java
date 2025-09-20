@@ -83,6 +83,21 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
+    public List<Film> getTopFilmsByGenreAndYear(Integer count, Integer genreId, Integer year) {
+        return List.of();
+    }
+
+    @Override
+    public List<Film> getTopFilmsByGenre(Integer count, Integer genreId) {
+        return List.of();
+    }
+
+    @Override
+    public List<Film> getTopFilmsByYear(Integer count, Integer year) {
+        return List.of();
+    }
+
+    @Override
     public boolean addLike(long id, long idUser) {
 
         return filmsLikes.computeIfAbsent(id, key -> new HashSet<>()).add(idUser);
