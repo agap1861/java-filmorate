@@ -6,6 +6,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import ru.yandex.practicum.filmorate.exception.BadInsertException;
+import ru.yandex.practicum.filmorate.exception.InternalServerException;
 
 import java.sql.PreparedStatement;
 import java.util.ArrayList;
@@ -28,8 +29,8 @@ public class BaseDbStorage<T> {
         }
     }
 
-    protected List<T> getAll(String query) {
-        return jdbc.query(query, mapper);
+    protected List<T> getAll(String query, Object... params) {
+        return jdbc.query(query, mapper, params);
     }
 
     protected long post(String query, Object... params) {
@@ -61,8 +62,13 @@ public class BaseDbStorage<T> {
         if (rowsUpdated == 0) {
             throw new BadInsertException("Unable to update data");
         }
+    }
 
-
+    protected void reviewUpdate(String query, Object... params) {
+        int rowsUpdated = jdbc.update(query, params);
+        if (rowsUpdated == 0) {
+            throw new InternalServerException("Не удалось обновить данные");
+        }
     }
 
     protected void remove(String query, long id_1, long id_2) {
