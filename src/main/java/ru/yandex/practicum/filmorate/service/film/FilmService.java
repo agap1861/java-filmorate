@@ -63,11 +63,19 @@ public class FilmService {
 
     }
 
-    public List<Film> getTopCountFilms(Integer count) {
+    public List<Film> getTopCountFilms(Optional<Integer> count, Optional<Integer> genreId, Optional<Integer> year) {
 
-        final int basic = count != null ? count : 10;
-        return filmStorage.getTopFilms(basic);
+        final int basic = count.isPresent() ? count.get() : 10;
 
+        if (genreId.isEmpty() && year.isEmpty())
+            return filmStorage.getTopFilms(basic);
+        else if (genreId.isPresent() && year.isEmpty()) {
+            return filmStorage.getTopFilmsByGenre(basic, genreId.get());
+        } else if (genreId.isEmpty() && year.isPresent()) {
+            return filmStorage.getTopFilmsByYear(basic, year.get());
+        } else {
+            return filmStorage.getTopFilmsByGenreAndYear(basic, genreId.get(), year.get());
+        }
     }
 
     public void validateOfData(Film film) {
