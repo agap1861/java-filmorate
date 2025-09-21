@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 
 import ru.yandex.practicum.filmorate.model.Feed;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
@@ -95,6 +96,11 @@ public class InMemoryUserStorage implements UserStorage {
                 .map(userId -> getUserById(userId).orElseThrow(() -> new NotFoundException("Not found")))
                 .toList();
 
+    }
+
+    @Override
+    public Set<Film> getRecommendationsForUser(long userId) {
+        return Set.of();
     }
 
     @Override

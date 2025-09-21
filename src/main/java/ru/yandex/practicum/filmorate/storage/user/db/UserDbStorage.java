@@ -8,13 +8,11 @@ import org.springframework.jdbc.core.RowMapper;
 
 import org.springframework.stereotype.Repository;
 
-import ru.yandex.practicum.filmorate.model.EventType;
-import ru.yandex.practicum.filmorate.model.Feed;
-import ru.yandex.practicum.filmorate.model.Operation;
-import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.storage.BaseDbStorage;
 
 import ru.yandex.practicum.filmorate.storage.mappers.FeedRowMapper;
+import ru.yandex.practicum.filmorate.storage.mappers.FilmRowMapper;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.sql.Date;
@@ -52,11 +50,37 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
             "WHERE (user_id = ? AND friend_id = ?) ";
     private static final String GET_FEED_BY_USER_ID = "SELECT * FROM feed WHERE user_id = ? ";
     private static final String IS_EXIST_FEED_BY_USER = "SELECT EXISTS(SELECT 1 FROM feed WHERE user_id = ?) ";
+    private static final String GET_RECOMMENDED_FILMS = "SELECT f.id, f.name, f.description, f.release_date, f.duration, " +
+            "f.mpa_id, m.name AS mpa_name, " +
+            "GROUP_CONCAT(g.id) AS genres_id, " +
+            "GROUP_CONCAT(g.name) AS genre_names, " +
+            "GROUP_CONCAT(d.id) AS directors_id, " +
+            "GROUP_CONCAT(d.name) AS director_names " +
+            "FROM films AS f " +
+            "INNER JOIN mpa AS m ON m.id=f.mpa_id " +
+            "LEFT JOIN film_genres AS fg ON fg.film_id = f.id " +
+            "LEFT JOIN genres AS g ON g.id = fg.genre_id " +
+            "LEFT JOIN films_directors AS fd ON fd.film_id = f.id " +
+            "LEFT JOIN directors AS d ON d.id = fd.director_id " +
+            "JOIN films_like AS t1 ON f.id = t1.film_id " +
+            "WHERE t1.user_id IN ( " +
+            "SELECT t2.user_id " +
+            "FROM films_like AS t1 " +
+            "JOIN films_like AS t2 ON t1.film_id = t2.film_id " +
+            "WHERE t1.user_id = ? AND t2.user_id <> ? " +
+            "GROUP BY t2.user_id " +
+            "ORDER BY COUNT(t2.user_id) DESC ) " +
+            "AND t1.film_id NOT IN ( " +
+            "SELECT t2.film_id " +
+            "FROM films_like AS t2 " +
+            "WHERE t2.user_id = ? ) " +
+            "GROUP BY f.id ";
+    private final FilmRowMapper filmRowMapper;
 
-
-    public UserDbStorage(JdbcTemplate jdbc, RowMapper<User> mapper, FeedRowMapper feedRowMapper) {
+    public UserDbStorage(JdbcTemplate jdbc, RowMapper<User> mapper, FeedRowMapper feedRowMapper, FilmRowMapper filmRowMapper) {
         super(jdbc, mapper);
         this.feedRowMapper = feedRowMapper;
+        this.filmRowMapper = filmRowMapper;
     }
 
     @Override
@@ -127,6 +151,11 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
     public List<User> getAllFriendsOfUserById(long id) {
         return queryForLst(GET_ALL_FRIENDS_BY_ID, id);
 
+    }
+
+    @Override
+    public Set<Film> getRecommendationsForUser(long userId) {
+        return new HashSet<>(jdbc.query(GET_RECOMMENDED_FILMS, filmRowMapper, userId, userId, userId));
     }
 
     @Override

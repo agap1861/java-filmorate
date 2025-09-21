@@ -9,6 +9,7 @@ import ru.yandex.practicum.filmorate.exception.DuplicateFriendException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Feed;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
@@ -62,6 +63,11 @@ public class UserService {
 
         return storage.getAllFriendsOfUserById(id);
 
+    }
+
+    public Set<Film> getRecommendationsForUser(long userId) {
+        isExistUser(userId);
+        return storage.getRecommendationsForUser(userId);
     }
 
     public Set<User> getCommonFriends(long userId, long friendId) {
