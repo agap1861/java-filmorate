@@ -418,6 +418,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     public List<Film> getAllFilmsByDirectorSortByLikes(long id) {
         return queryForLst(GET_FILMS_BY_DIRECTOR_SORT_BY_LIKE, id);
     }
+
     @Override
     public List<Film> searchFilmsByTitle(String query) {
         return jdbcTemplate.query(SEARCH_FILMS_BY_TITLE, filmRowMapper, query);
