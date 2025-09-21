@@ -8,6 +8,7 @@ import org.springframework.util.StringUtils;
 import ru.yandex.practicum.filmorate.exception.DuplicateFriendException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.Feed;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
@@ -101,6 +102,15 @@ public class UserService {
     public void removeUser(long userId) {
         isExistUser(userId);
         storage.removeUser(userId);
+    }
+
+    public List<Feed> getFeedByUSer(long userId) {
+        isExistUser(userId);
+        if (storage.isExistFeedByUser(userId)) {
+            return storage.getFeedByUserId(userId);
+        } else {
+            return null;
+        }
     }
 
     public void validateOfDataForPost(User user) {

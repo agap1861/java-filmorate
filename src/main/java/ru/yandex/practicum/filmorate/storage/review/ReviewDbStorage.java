@@ -3,6 +3,8 @@ package ru.yandex.practicum.filmorate.storage.review;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.model.EventType;
+import ru.yandex.practicum.filmorate.model.Operation;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.storage.BaseDbStorage;
 
@@ -65,7 +67,6 @@ public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStor
             "MERGE INTO review_ratings(review_id, user_id, is_like) KEY (review_id, user_id) VALUES (?, ?, ?)";
     private static final String DELETE_RATING_QUERY = "DELETE FROM review_ratings WHERE review_id = ? AND user_id = ?";
 
-
     public ReviewDbStorage(JdbcTemplate jdbc, RowMapper<Review> mapper) {
         super(jdbc, mapper);
     }
@@ -84,6 +85,7 @@ public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStor
 
     @Override
     public void removeReview(long reviewId) {
+        postEvent(getReviewById(reviewId).get().getUserId(), EventType.REVIEW, Operation.REMOVE, reviewId);//может стоит изменить
         delete(REMOVE_REVIEW, reviewId);
     }
 
@@ -95,6 +97,7 @@ public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStor
                 review.getUserId(),
                 review.getFilmId());
         review.setReviewId(id);
+        postEvent(review.getUserId(), EventType.REVIEW, Operation.ADD, review.getReviewId());
         return review;
     }
 
@@ -106,6 +109,7 @@ public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStor
                 review.getUserId(),
                 review.getFilmId(),
                 review.getReviewId());
+        postEvent(review.getUserId(), EventType.REVIEW, Operation.UPDATE, review.getReviewId());
         return review;
     }
 

@@ -7,8 +7,12 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import ru.yandex.practicum.filmorate.exception.BadInsertException;
 import ru.yandex.practicum.filmorate.exception.InternalServerException;
+import ru.yandex.practicum.filmorate.model.EventType;
+import ru.yandex.practicum.filmorate.model.Operation;
 
 import java.sql.PreparedStatement;
+
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -91,6 +95,17 @@ public class BaseDbStorage<T> {
 
     protected void delete(String query, long id) {
         jdbc.update(query, id);
+    }
+
+    protected void postEvent(long idUser, EventType eventType, Operation operation, long idEntity) {
+        final String ADD_IN_FEED = "INSERT INTO feed (timestamp,user_id,event_type,operation,entity_id)  VALUES (?, ?, ?, ?, ?)";
+        post(ADD_IN_FEED,
+                Instant.now().toEpochMilli(),
+                idUser,
+                eventType.name(),
+                operation.name(),
+                idEntity);
+
     }
 
 
