@@ -8,9 +8,13 @@ import org.springframework.jdbc.core.RowMapper;
 
 import org.springframework.stereotype.Repository;
 
+import ru.yandex.practicum.filmorate.model.EventType;
+import ru.yandex.practicum.filmorate.model.Feed;
+import ru.yandex.practicum.filmorate.model.Operation;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.BaseDbStorage;
 
+import ru.yandex.practicum.filmorate.storage.mappers.FeedRowMapper;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.sql.Date;
@@ -18,15 +22,16 @@ import java.sql.Date;
 import java.util.*;
 
 @Slf4j
-
 @Repository
 public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
+    private final FeedRowMapper feedRowMapper;
+
 
     private static final String GET_ALL_USERS = "SELECT * FROM users";
     private static final String INSERT_USER = "INSERT INTO users (name,email,login,birthday) VALUES (?, ?, ?, ?)";
     private static final String UPDATE_USER = "UPDATE users SET ";
     private static final String GET_USER_BY_ID = "SELECT * FROM users WHERE id = ?";
-    private static final String REMOVE_USER_BY_ID = "DELETE FROM friends WHERE (user_id = ? AND friend_id = ?) ";
+    private static final String REMOVE_USER_FROM_FRIEND = "DELETE FROM friends WHERE (user_id = ? AND friend_id = ?) ";
     private static final String REMOVE_USER = "DELETE FROM users WHERE id = ?";
 
     private static final String GET_ALL_FRIENDS_BY_ID = "SELECT * " +
@@ -45,9 +50,13 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
     private static final String QUERY_FOR_FRIEND = "SELECT COUNT(*) " +
             "FROM friends " +
             "WHERE (user_id = ? AND friend_id = ?) ";
+    private static final String GET_FEED_BY_USER_ID = "SELECT * FROM feed WHERE user_id = ? ";
+    private static final String IS_EXIST_FEED_BY_USER = "SELECT EXISTS(SELECT 1 FROM feed WHERE user_id = ?) ";
 
-    public UserDbStorage(JdbcTemplate jdbc, RowMapper<User> mapper) {
+
+    public UserDbStorage(JdbcTemplate jdbc, RowMapper<User> mapper, FeedRowMapper feedRowMapper) {
         super(jdbc, mapper);
+        this.feedRowMapper = feedRowMapper;
     }
 
     @Override
@@ -111,7 +120,7 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
     public void addInFriends(long userId, long friendId) {
 
         jdbc.update(ADD_IN_FRIEND, userId, friendId);
-
+        postEvent(userId, EventType.FRIEND, Operation.ADD, friendId);
     }
 
     @Override
@@ -128,7 +137,9 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
 
     @Override
     public void removeFriend(long userId, long friendId) {
-        remove(REMOVE_USER_BY_ID, userId, friendId);
+        remove(REMOVE_USER_FROM_FRIEND, userId, friendId);
+        postEvent(userId, EventType.FRIEND, Operation.REMOVE, friendId);
+
     }
 
     @Override
@@ -141,6 +152,16 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
     public boolean haveUserFriend(long first, long second) {
         Integer count = jdbc.queryForObject(QUERY_FOR_FRIEND, Integer.class, first, second);
         return count != null && count > 0;
+    }
+
+    @Override
+    public List<Feed> getFeedByUserId(long id) {
+        return jdbc.query(GET_FEED_BY_USER_ID, feedRowMapper, id);
+    }
+
+    @Override
+    public boolean isExistFeedByUser(long id) {
+        return isExistById(IS_EXIST_FEED_BY_USER, id);
     }
 
 

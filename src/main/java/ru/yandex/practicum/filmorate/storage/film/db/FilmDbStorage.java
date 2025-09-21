@@ -8,9 +8,7 @@ import org.springframework.jdbc.core.RowMapper;
 
 import org.springframework.stereotype.Repository;
 
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.MPA;
+import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.storage.BaseDbStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
@@ -18,6 +16,7 @@ import ru.yandex.practicum.filmorate.storage.mappers.GenreRowMapper;
 import ru.yandex.practicum.filmorate.storage.mappers.MPARowMapper;
 
 import java.sql.Date;
+
 
 
 import java.util.*;
@@ -45,7 +44,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             "LEFT JOIN films_directors AS fd ON fd.film_id = f.id " +
             "LEFT JOIN directors AS d ON d.id = fd.director_id " +
             "GROUP BY f.id";
-    private static final String INSERT_USER = "INSERT INTO films (name,description,release_date,duration,mpa_id)" +
+    private static final String INSERT_FILM = "INSERT INTO films (name,description,release_date,duration,mpa_id)" +
             " VALUES (?, ?, ?, ?, ?)";
     private static final String UPDATE_FILM = "UPDATE films SET ";
     private static final String GET_FILM_BY_ID = "SELECT f.id, f.name, f.description, f.release_date, f.duration, " +
@@ -173,6 +172,8 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private static final String ADD_IN_FILMS_DIRECTOR = "INSERT INTO films_directors (film_id, director_id) VALUES (?, ?) ";
     private static final String DELETE_DIRECTORS = "DELETE FROM films_directors WHERE film_id = ? ";
 
+    private static final String ADD_IN_FEED = "INSERT INTO feed (timestamp,user_id,event_type,operation,entity_id)  VALUES (?, ?, ?, ?, ?)";
+
 
     public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper, GenreRowMapper genreMapper, MPARowMapper mpaMapper) {
         super(jdbc, mapper);
@@ -188,7 +189,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     @Override
     public Film postFilm(Film film) {
         long id = post(
-                INSERT_USER,
+                INSERT_FILM,
                 film.getName(),
                 film.getDescription(),
                 Date.valueOf(film.getReleaseDate()),
@@ -264,7 +265,13 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     @Override
     public boolean addLike(long id, long idUser) {
         int rowsUpdate = jdbc.update(ADD_LIKE, id, idUser);
-        return rowsUpdate != 0;
+        // return rowsUpdate != 0;
+        if (rowsUpdate != 0) {
+            postEvent(idUser, EventType.LIKE, Operation.ADD, id);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     @Override
@@ -295,6 +302,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     @Override
     public void removeLike(long idFilm, long idUser) {
         remove(REMOVE_LIKE, idFilm, idUser);
+        postEvent(idUser,EventType.LIKE,Operation.REMOVE,idFilm);
     }
 
     @Override

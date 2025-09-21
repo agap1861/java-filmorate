@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.storage.user;
 
 
+import ru.yandex.practicum.filmorate.model.Feed;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.*;
@@ -29,5 +30,9 @@ public interface UserStorage {
     boolean isExistListOfFriends(long id);
 
     boolean haveUserFriend(long first, long second);
+
+    List<Feed> getFeedByUserId(long id);
+
+    boolean isExistFeedByUser(long id);
 
 }
