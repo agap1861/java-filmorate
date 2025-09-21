@@ -31,8 +31,6 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     private final GenreRowMapper genreMapper;
     private final MPARowMapper mpaMapper;
-    private final FilmRowMapper filmRowMapper;
-    private final JdbcTemplate jdbcTemplate;
 
     private static final String GET_ALL_FILMS = "SELECT f.id, f.name, f.description, f.release_date, f.duration, " +
             "f.mpa_id, m.name AS mpa_name, " +
@@ -230,12 +228,10 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
 
     public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper, GenreRowMapper genreMapper,
-                         MPARowMapper mpaMapper, FilmRowMapper filmRowMapper, JdbcTemplate jdbcTemplate) {
+                         MPARowMapper mpaMapper) {
         super(jdbc, mapper);
         this.genreMapper = genreMapper;
         this.mpaMapper = mpaMapper;
-        this.filmRowMapper = filmRowMapper;
-        this.jdbcTemplate = jdbcTemplate;
     }
 
     @Override
@@ -421,16 +417,16 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     @Override
     public List<Film> searchFilmsByTitle(String query) {
-        return jdbcTemplate.query(SEARCH_FILMS_BY_TITLE, filmRowMapper, query);
+        return getAll(SEARCH_FILMS_BY_TITLE, query);
     }
 
     @Override
     public List<Film> searchFilmsByDirector(String query) {
-        return jdbcTemplate.query(SEARCH_FILMS_BY_DIRECTOR, filmRowMapper, query);
+        return getAll(SEARCH_FILMS_BY_DIRECTOR, query);
     }
 
     @Override
     public List<Film> searchFilmsByTitleAndDirector(String query) {
-        return jdbcTemplate.query(SEARCH_FILMS_BY_TITLE_AND_DIRECTOR, filmRowMapper, query, query);
+        return getAll(SEARCH_FILMS_BY_TITLE_AND_DIRECTOR, query, query);
     }
 }
