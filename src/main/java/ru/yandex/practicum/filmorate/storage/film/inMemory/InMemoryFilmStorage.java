@@ -12,6 +12,7 @@ import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 @Slf4j
