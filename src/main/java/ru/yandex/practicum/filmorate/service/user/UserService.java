@@ -65,7 +65,7 @@ public class UserService {
 
     }
 
-    public Set<Film> getRecommendationsForUser(long userId){
+    public Set<Film> getRecommendationsForUser(long userId) {
         isExistUser(userId);
         return storage.getRecommendationsForUser(userId);
     }
