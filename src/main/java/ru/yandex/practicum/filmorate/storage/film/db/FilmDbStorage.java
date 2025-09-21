@@ -361,4 +361,48 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     public List<Film> getAllFilmsByDirectorSortByLikes(long id) {
         return queryForLst(GET_FILMS_BY_DIRECTOR_SORT_BY_LIKE, id);
     }
+
+    @Override
+    public List<Film> getFilmsByTitleKeyword(String lowerCaseQuery) {
+        String sqlQuery =
+                "SELECT films.* FROM films " +
+                        "LEFT JOIN likes " +
+                        "ON films.film_id = likes.film_id " +
+                        "WHERE LOWER(films.name) LIKE '%'||?||'%' " +
+                        "GROUP BY films.film_id " +
+                        "ORDER BY COUNT(likes.user_id) DESC";
+        return jdbcTemplate.query(sqlQuery, this::mapRowToFilm, lowerCaseQuery);
+    }
+
+    @Override
+    public List<Film> getFilmsByDirectorKeyword(String lowerCaseQuery) {
+        String sqlQuery = "SELECT films.* FROM films " +
+                "LEFT JOIN likes " +
+                "ON films.film_id = likes.film_id " +
+                "JOIN film_director_line " +
+                "ON films.film_id = film_director_line.film_id " +
+                "JOIN directors " +
+                "ON film_director_line.director_id = directors.director_id " +
+                "WHERE LOWER(directors.name) LIKE '%'||?||'%' " +
+                "GROUP BY films.film_id " +
+                "ORDER BY COUNT(likes.user_id) DESC";
+        return jdbcTemplate.query(sqlQuery, this::mapRowToFilm, lowerCaseQuery);
+    }
+
+    @Override
+    public List<Film> getFilmsByTitleAndDirectorKeyword(String lowerCaseQuery) {
+        String sqlQuery =
+                "SELECT films.* FROM films " +
+                        "LEFT JOIN likes " +
+                        "ON films.film_id = likes.film_id " +
+                        "WHERE LOWER(films.name) LIKE '%'||?||'%' OR films.film_id IN " +
+                        "(SELECT film_director_line.film_id FROM film_director_line " +
+                        "JOIN directors " +
+                        "ON film_director_line.director_id = directors.director_id " +
+                        "WHERE LOWER(directors.name) LIKE '%'||?||'%') " +
+                        "GROUP BY films.film_id " +
+                        "ORDER BY COUNT(likes.user_id) DESC";
+        return jdbcTemplate.query(sqlQuery, this::mapRowToFilm, lowerCaseQuery, lowerCaseQuery);
+    }
+
 }

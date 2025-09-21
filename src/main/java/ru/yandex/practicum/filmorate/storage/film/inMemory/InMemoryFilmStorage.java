@@ -152,4 +152,20 @@ public class InMemoryFilmStorage implements FilmStorage {
     public List<Film> getAllFilmsByDirectorSortByLikes(long id) {
         return List.of();
     }
+
+    @Override
+    public List<Film> getFilmsByTitleKeyword(String query) {
+        return null;
+    }
+
+    @Override
+    public List<Film> getFilmsByDirectorKeyword(String query) {
+        return null;
+    }
+
+    @Override
+    public List<Film> getFilmsByTitleAndDirectorKeyword(String query) {
+        return null;
+    }
+
 }

@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import org.springframework.http.HttpMethod;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -85,5 +86,11 @@ public class FilmController {
         service.removeLike(id, userId);
     }
 
+    @GetMapping("/search")
+    public List<Film> getSearchedFilms(@RequestParam(defaultValue = "") String query,
+                                       @RequestParam(required = false) List<String> by) {
+        Logger.logRequest(HttpMethod.GET, "/films/search?query=" + query + "&by=" + by, "no body");
+        return filmService.getFilmsByQuery(query, by);
+    }
 
 }
