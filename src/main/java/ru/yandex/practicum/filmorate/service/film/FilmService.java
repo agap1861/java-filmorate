@@ -41,6 +41,25 @@ public class FilmService {
         this.directorStorage = directorStorage;
     }
 
+    public List<Film> searchFilms(String query, List<String> by) {
+        if (query == null || query.trim().isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        String lowerCaseQuery = query.toLowerCase().trim();
+
+        if (by.contains("title") && by.contains("director")) {
+            return filmStorage.searchFilmsByTitleAndDirector(lowerCaseQuery);
+        } else if (by.contains("title")) {
+            return filmStorage.searchFilmsByTitle(lowerCaseQuery);
+        } else if (by.contains("director")) {
+            return filmStorage.searchFilmsByDirector(lowerCaseQuery);
+        } else {
+            // По умолчанию ищем и по названию, и по режиссеру
+            return filmStorage.searchFilmsByTitleAndDirector(lowerCaseQuery);
+        }
+    }
+
     public void addLike(long idFilm, long idUser) {
         validateExist(idFilm, idUser);
 
@@ -213,30 +232,6 @@ public class FilmService {
             log.info(e.getMessage());
         }
         return null;
-    }
-
-
-    public List<Film> getFilmsByQuery(String query, List<String> searchParams) {
-        List<Film> films;
-        if (query.isBlank()) {
-            films =  getFilms().stream()
-                    .sorted(Comparator.comparingInt(f -> f.getLikes().size()))
-                    .collect(Collectors.toList());
-        } else {
-            String lowerCaseQuery = query.toLowerCase();
-            if (searchParams.contains("director") && searchParams.contains("title")) {
-                films = filmStorage.getFilmsByTitleAndDirectorKeyword(lowerCaseQuery);
-            } else if (searchParams.contains("title")) {
-                films = filmStorage.getFilmsByTitleKeyword(lowerCaseQuery);
-            } else if (searchParams.contains("director")) {
-                films = filmStorage.getFilmsByDirectorKeyword(lowerCaseQuery);
-            } else {
-                films = filmStorage.getFilmsByTitleAndDirectorKeyword(lowerCaseQuery);
-            }
-        }
-        Logger.logSave(HttpMethod.GET, "/films/search?query=" + query + "&by=" + searchParams,
-                films.toString());
-        return films;
     }
 
 }

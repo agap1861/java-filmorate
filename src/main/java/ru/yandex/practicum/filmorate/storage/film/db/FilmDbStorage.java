@@ -12,6 +12,7 @@ import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.storage.BaseDbStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
+import ru.yandex.practicum.filmorate.storage.mappers.FilmRowMapper;
 import ru.yandex.practicum.filmorate.storage.mappers.GenreRowMapper;
 import ru.yandex.practicum.filmorate.storage.mappers.MPARowMapper;
 
@@ -30,6 +31,8 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     private final GenreRowMapper genreMapper;
     private final MPARowMapper mpaMapper;
+    private final FilmRowMapper filmRowMapper;
+    private final JdbcTemplate jdbcTemplate;
 
     private static final String GET_ALL_FILMS = "SELECT f.id, f.name, f.description, f.release_date, f.duration, " +
             "f.mpa_id, m.name AS mpa_name, " +
@@ -171,14 +174,68 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private static final String EXIST = "SELECT EXISTS(SELECT 1 FROM films WHERE id = ?) ";
     private static final String ADD_IN_FILMS_DIRECTOR = "INSERT INTO films_directors (film_id, director_id) VALUES (?, ?) ";
     private static final String DELETE_DIRECTORS = "DELETE FROM films_directors WHERE film_id = ? ";
+    private static final String SEARCH_FILMS_BY_TITLE =
+            "SELECT f.id, f.name, f.description, f.release_date, f.duration, " +
+                    "f.mpa_id, m.name AS mpa_name, " +
+                    "GROUP_CONCAT(DISTINCT g.id) AS genres_id, " +
+                    "GROUP_CONCAT(DISTINCT g.name) AS genre_names, " +
+                    "GROUP_CONCAT(DISTINCT d.id) AS directors_id, " +
+                    "GROUP_CONCAT(DISTINCT d.name) AS director_names " +
+                    "FROM films AS f " +
+                    "INNER JOIN mpa AS m ON m.id = f.mpa_id " +
+                    "LEFT JOIN film_genres AS fg ON fg.film_id = f.id " +
+                    "LEFT JOIN genres AS g ON g.id = fg.genre_id " +
+                    "LEFT JOIN films_directors AS fd ON fd.film_id = f.id " +
+                    "LEFT JOIN directors AS d ON d.id = fd.director_id " +
+                    "LEFT JOIN films_like AS fl ON fl.film_id = f.id " +
+                    "WHERE LOWER(f.name) LIKE '%' || ? || '%' " +
+                    "GROUP BY f.id " +
+                    "ORDER BY COUNT(DISTINCT fl.user_id) DESC";
+    private static final String SEARCH_FILMS_BY_DIRECTOR =
+            "SELECT f.id, f.name, f.description, f.release_date, f.duration, " +
+                    "f.mpa_id, m.name AS mpa_name, " +
+                    "GROUP_CONCAT(DISTINCT g.id) AS genres_id, " +
+                    "GROUP_CONCAT(DISTINCT g.name) AS genre_names, " +
+                    "GROUP_CONCAT(DISTINCT d.id) AS directors_id, " +
+                    "GROUP_CONCAT(DISTINCT d.name) AS director_names " +
+                    "FROM films AS f " +
+                    "INNER JOIN mpa AS m ON m.id = f.mpa_id " +
+                    "LEFT JOIN film_genres AS fg ON fg.film_id = f.id " +
+                    "LEFT JOIN genres AS g ON g.id = fg.genre_id " +
+                    "LEFT JOIN films_directors AS fd ON fd.film_id = f.id " +
+                    "LEFT JOIN directors AS d ON d.id = fd.director_id " +
+                    "LEFT JOIN films_like AS fl ON fl.film_id = f.id " +
+                    "WHERE LOWER(d.name) LIKE '%' || ? || '%' " +
+                    "GROUP BY f.id " +
+                    "ORDER BY COUNT(DISTINCT fl.user_id) DESC";
+    private static final String SEARCH_FILMS_BY_TITLE_AND_DIRECTOR =
+            "SELECT f.id, f.name, f.description, f.release_date, f.duration, " +
+                    "f.mpa_id, m.name AS mpa_name, " +
+                    "GROUP_CONCAT(DISTINCT g.id) AS genres_id, " +
+                    "GROUP_CONCAT(DISTINCT g.name) AS genre_names, " +
+                    "GROUP_CONCAT(DISTINCT d.id) AS directors_id, " +
+                    "GROUP_CONCAT(DISTINCT d.name) AS director_names " +
+                    "FROM films AS f " +
+                    "INNER JOIN mpa AS m ON m.id = f.mpa_id " +
+                    "LEFT JOIN film_genres AS fg ON fg.film_id = f.id " +
+                    "LEFT JOIN genres AS g ON g.id = fg.genre_id " +
+                    "LEFT JOIN films_directors AS fd ON fd.film_id = f.id " +
+                    "LEFT JOIN directors AS d ON d.id = fd.director_id " +
+                    "LEFT JOIN films_like AS fl ON fl.film_id = f.id " +
+                    "WHERE LOWER(f.name) LIKE '%' || ? || '%' OR LOWER(d.name) LIKE '%' || ? || '%' " +
+                    "GROUP BY f.id " +
+                    "ORDER BY COUNT(DISTINCT fl.user_id) DESC";
 
     private static final String ADD_IN_FEED = "INSERT INTO feed (timestamp,user_id,event_type,operation,entity_id)  VALUES (?, ?, ?, ?, ?)";
 
 
-    public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper, GenreRowMapper genreMapper, MPARowMapper mpaMapper) {
+    public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper, GenreRowMapper genreMapper,
+                         MPARowMapper mpaMapper, FilmRowMapper filmRowMapper, JdbcTemplate jdbcTemplate) {
         super(jdbc, mapper);
         this.genreMapper = genreMapper;
         this.mpaMapper = mpaMapper;
+        this.filmRowMapper = filmRowMapper;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     @Override
@@ -361,48 +418,18 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     public List<Film> getAllFilmsByDirectorSortByLikes(long id) {
         return queryForLst(GET_FILMS_BY_DIRECTOR_SORT_BY_LIKE, id);
     }
-
     @Override
-    public List<Film> getFilmsByTitleKeyword(String lowerCaseQuery) {
-        String sqlQuery =
-                "SELECT films.* FROM films " +
-                        "LEFT JOIN likes " +
-                        "ON films.film_id = likes.film_id " +
-                        "WHERE LOWER(films.name) LIKE '%'||?||'%' " +
-                        "GROUP BY films.film_id " +
-                        "ORDER BY COUNT(likes.user_id) DESC";
-        return jdbcTemplate.query(sqlQuery, this::mapRowToFilm, lowerCaseQuery);
+    public List<Film> searchFilmsByTitle(String query) {
+        return jdbcTemplate.query(SEARCH_FILMS_BY_TITLE, filmRowMapper, query);
     }
 
     @Override
-    public List<Film> getFilmsByDirectorKeyword(String lowerCaseQuery) {
-        String sqlQuery = "SELECT films.* FROM films " +
-                "LEFT JOIN likes " +
-                "ON films.film_id = likes.film_id " +
-                "JOIN film_director_line " +
-                "ON films.film_id = film_director_line.film_id " +
-                "JOIN directors " +
-                "ON film_director_line.director_id = directors.director_id " +
-                "WHERE LOWER(directors.name) LIKE '%'||?||'%' " +
-                "GROUP BY films.film_id " +
-                "ORDER BY COUNT(likes.user_id) DESC";
-        return jdbcTemplate.query(sqlQuery, this::mapRowToFilm, lowerCaseQuery);
+    public List<Film> searchFilmsByDirector(String query) {
+        return jdbcTemplate.query(SEARCH_FILMS_BY_DIRECTOR, filmRowMapper, query);
     }
 
     @Override
-    public List<Film> getFilmsByTitleAndDirectorKeyword(String lowerCaseQuery) {
-        String sqlQuery =
-                "SELECT films.* FROM films " +
-                        "LEFT JOIN likes " +
-                        "ON films.film_id = likes.film_id " +
-                        "WHERE LOWER(films.name) LIKE '%'||?||'%' OR films.film_id IN " +
-                        "(SELECT film_director_line.film_id FROM film_director_line " +
-                        "JOIN directors " +
-                        "ON film_director_line.director_id = directors.director_id " +
-                        "WHERE LOWER(directors.name) LIKE '%'||?||'%') " +
-                        "GROUP BY films.film_id " +
-                        "ORDER BY COUNT(likes.user_id) DESC";
-        return jdbcTemplate.query(sqlQuery, this::mapRowToFilm, lowerCaseQuery, lowerCaseQuery);
+    public List<Film> searchFilmsByTitleAndDirector(String query) {
+        return jdbcTemplate.query(SEARCH_FILMS_BY_TITLE_AND_DIRECTOR, filmRowMapper, query, query);
     }
-
 }

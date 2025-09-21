@@ -154,18 +154,26 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public List<Film> getFilmsByTitleKeyword(String query) {
-        return null;
+    public List<Film> searchFilmsByTitle(String query) {
+        String lowerQuery = query.toLowerCase();
+        return films.values().stream()
+                .filter(film -> film.getName().toLowerCase().contains(lowerQuery))
+                .sorted((f1, f2) -> Integer.compare(
+                        filmsLikes.getOrDefault(f2.getId(), Collections.emptySet()).size(),
+                        filmsLikes.getOrDefault(f1.getId(), Collections.emptySet()).size()
+                ))
+                .collect(Collectors.toList());
     }
 
     @Override
-    public List<Film> getFilmsByDirectorKeyword(String query) {
-        return null;
+    public List<Film> searchFilmsByDirector(String query) {
+        // Для in-memory реализации поиск по режиссеру не поддерживается
+        return Collections.emptyList();
     }
 
     @Override
-    public List<Film> getFilmsByTitleAndDirectorKeyword(String query) {
-        return null;
+    public List<Film> searchFilmsByTitleAndDirector(String query) {
+        // Для in-memory реализации поиск по режиссеру не поддерживается
+        return searchFilmsByTitle(query);
     }
-
 }
