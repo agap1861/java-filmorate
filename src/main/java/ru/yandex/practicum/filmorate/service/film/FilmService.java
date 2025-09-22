@@ -4,6 +4,7 @@ package ru.yandex.practicum.filmorate.service.film;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -38,6 +39,25 @@ public class FilmService {
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
         this.directorStorage = directorStorage;
+    }
+
+    public List<Film> searchFilms(String query, List<String> by) {
+        if (query == null || query.trim().isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        String lowerCaseQuery = query.toLowerCase().trim();
+
+        if (by.contains("title") && by.contains("director")) {
+            return filmStorage.searchFilmsByTitleAndDirector(lowerCaseQuery);
+        } else if (by.contains("title")) {
+            return filmStorage.searchFilmsByTitle(lowerCaseQuery);
+        } else if (by.contains("director")) {
+            return filmStorage.searchFilmsByDirector(lowerCaseQuery);
+        } else {
+            // По умолчанию ищем и по названию, и по режиссеру
+            return filmStorage.searchFilmsByTitleAndDirector(lowerCaseQuery);
+        }
     }
 
     public void addLike(long idFilm, long idUser) {
@@ -213,6 +233,5 @@ public class FilmService {
         }
         return null;
     }
-
 
 }

@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+
 import org.springframework.web.bind.annotation.*;
 
 
@@ -85,5 +86,11 @@ public class FilmController {
         service.removeLike(id, userId);
     }
 
+    @GetMapping("/search")
+    public List<Film> searchFilms(@RequestParam String query,
+                                  @RequestParam(defaultValue = "title,director") List<String> by) {
+        log.info("Search films with query: '{}', by: {}", query, by);
+        return service.searchFilms(query, by);
+    }
 
 }

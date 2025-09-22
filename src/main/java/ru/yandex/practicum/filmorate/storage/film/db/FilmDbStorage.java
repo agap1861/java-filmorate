@@ -171,11 +171,63 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private static final String EXIST = "SELECT EXISTS(SELECT 1 FROM films WHERE id = ?) ";
     private static final String ADD_IN_FILMS_DIRECTOR = "INSERT INTO films_directors (film_id, director_id) VALUES (?, ?) ";
     private static final String DELETE_DIRECTORS = "DELETE FROM films_directors WHERE film_id = ? ";
+    private static final String SEARCH_FILMS_BY_TITLE =
+            "SELECT f.id, f.name, f.description, f.release_date, f.duration, " +
+                    "f.mpa_id, m.name AS mpa_name, " +
+                    "GROUP_CONCAT(DISTINCT g.id) AS genres_id, " +
+                    "GROUP_CONCAT(DISTINCT g.name) AS genre_names, " +
+                    "GROUP_CONCAT(DISTINCT d.id) AS directors_id, " +
+                    "GROUP_CONCAT(DISTINCT d.name) AS director_names " +
+                    "FROM films AS f " +
+                    "INNER JOIN mpa AS m ON m.id = f.mpa_id " +
+                    "LEFT JOIN film_genres AS fg ON fg.film_id = f.id " +
+                    "LEFT JOIN genres AS g ON g.id = fg.genre_id " +
+                    "LEFT JOIN films_directors AS fd ON fd.film_id = f.id " +
+                    "LEFT JOIN directors AS d ON d.id = fd.director_id " +
+                    "LEFT JOIN films_like AS fl ON fl.film_id = f.id " +
+                    "WHERE LOWER(f.name) LIKE '%' || ? || '%' " +
+                    "GROUP BY f.id " +
+                    "ORDER BY COUNT(DISTINCT fl.user_id) DESC";
+    private static final String SEARCH_FILMS_BY_DIRECTOR =
+            "SELECT f.id, f.name, f.description, f.release_date, f.duration, " +
+                    "f.mpa_id, m.name AS mpa_name, " +
+                    "GROUP_CONCAT(DISTINCT g.id) AS genres_id, " +
+                    "GROUP_CONCAT(DISTINCT g.name) AS genre_names, " +
+                    "GROUP_CONCAT(DISTINCT d.id) AS directors_id, " +
+                    "GROUP_CONCAT(DISTINCT d.name) AS director_names " +
+                    "FROM films AS f " +
+                    "INNER JOIN mpa AS m ON m.id = f.mpa_id " +
+                    "LEFT JOIN film_genres AS fg ON fg.film_id = f.id " +
+                    "LEFT JOIN genres AS g ON g.id = fg.genre_id " +
+                    "LEFT JOIN films_directors AS fd ON fd.film_id = f.id " +
+                    "LEFT JOIN directors AS d ON d.id = fd.director_id " +
+                    "LEFT JOIN films_like AS fl ON fl.film_id = f.id " +
+                    "WHERE LOWER(d.name) LIKE '%' || ? || '%' " +
+                    "GROUP BY f.id " +
+                    "ORDER BY COUNT(DISTINCT fl.user_id) DESC";
+    private static final String SEARCH_FILMS_BY_TITLE_AND_DIRECTOR =
+            "SELECT f.id, f.name, f.description, f.release_date, f.duration, " +
+                    "f.mpa_id, m.name AS mpa_name, " +
+                    "GROUP_CONCAT(DISTINCT g.id) AS genres_id, " +
+                    "GROUP_CONCAT(DISTINCT g.name) AS genre_names, " +
+                    "GROUP_CONCAT(DISTINCT d.id) AS directors_id, " +
+                    "GROUP_CONCAT(DISTINCT d.name) AS director_names " +
+                    "FROM films AS f " +
+                    "INNER JOIN mpa AS m ON m.id = f.mpa_id " +
+                    "LEFT JOIN film_genres AS fg ON fg.film_id = f.id " +
+                    "LEFT JOIN genres AS g ON g.id = fg.genre_id " +
+                    "LEFT JOIN films_directors AS fd ON fd.film_id = f.id " +
+                    "LEFT JOIN directors AS d ON d.id = fd.director_id " +
+                    "LEFT JOIN films_like AS fl ON fl.film_id = f.id " +
+                    "WHERE LOWER(f.name) LIKE '%' || ? || '%' OR LOWER(d.name) LIKE '%' || ? || '%' " +
+                    "GROUP BY f.id " +
+                    "ORDER BY COUNT(DISTINCT fl.user_id) DESC";
 
     private static final String ADD_IN_FEED = "INSERT INTO feed (timestamp,user_id,event_type,operation,entity_id)  VALUES (?, ?, ?, ?, ?)";
 
 
-    public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper, GenreRowMapper genreMapper, MPARowMapper mpaMapper) {
+    public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper, GenreRowMapper genreMapper,
+                         MPARowMapper mpaMapper) {
         super(jdbc, mapper);
         this.genreMapper = genreMapper;
         this.mpaMapper = mpaMapper;
@@ -360,5 +412,20 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     @Override
     public List<Film> getAllFilmsByDirectorSortByLikes(long id) {
         return queryForLst(GET_FILMS_BY_DIRECTOR_SORT_BY_LIKE, id);
+    }
+
+    @Override
+    public List<Film> searchFilmsByTitle(String query) {
+        return getAll(SEARCH_FILMS_BY_TITLE, query);
+    }
+
+    @Override
+    public List<Film> searchFilmsByDirector(String query) {
+        return getAll(SEARCH_FILMS_BY_DIRECTOR, query);
+    }
+
+    @Override
+    public List<Film> searchFilmsByTitleAndDirector(String query) {
+        return getAll(SEARCH_FILMS_BY_TITLE_AND_DIRECTOR, query, query);
     }
 }
