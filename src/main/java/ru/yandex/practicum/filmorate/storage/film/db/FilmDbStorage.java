@@ -448,7 +448,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     @Override
     public List<Film> searchFilmsByTitleAndDirector(String query) {
-        return getAll(SEARCH_FILMS_BY_TITLE_AND_DIRECTOR, query);
+        return getAll(SEARCH_FILMS_BY_TITLE_AND_DIRECTOR, query, query);
     }
 
     @Override
