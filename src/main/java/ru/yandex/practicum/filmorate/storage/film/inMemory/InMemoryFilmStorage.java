@@ -177,4 +177,9 @@ public class InMemoryFilmStorage implements FilmStorage {
         // Для in-memory реализации поиск по режиссеру не поддерживается
         return searchFilmsByTitle(query);
     }
+
+    @Override
+    public Collection<Film> getCommonFilms(int userId, int friendId) {
+               return Collections.emptyList();
+    }
 }

@@ -222,6 +222,28 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                     "WHERE LOWER(f.name) LIKE '%' || ? || '%' OR LOWER(d.name) LIKE '%' || ? || '%' " +
                     "GROUP BY f.id " +
                     "ORDER BY COUNT(DISTINCT fl.user_id) DESC";
+    private static final String GET_COMMON_FILMS =
+            "SELECT f.id, f.name, f.description, f.release_date, f.duration, " +
+                    "f.mpa_id, m.name AS mpa_name, " +
+                    "GROUP_CONCAT(DISTINCT g.id) AS genres_id, " +
+                    "GROUP_CONCAT(DISTINCT g.name) AS genre_names, " +
+                    "GROUP_CONCAT(DISTINCT d.id) AS directors_id, " +
+                    "GROUP_CONCAT(DISTINCT d.name) AS director_names, " +
+                    "COUNT(DISTINCT fl.user_id) AS likes_count " +
+                    "FROM films AS f " +
+                    "INNER JOIN mpa AS m ON m.id = f.mpa_id " +
+                    "LEFT JOIN film_genres AS fg ON fg.film_id = f.id " +
+                    "LEFT JOIN genres AS g ON g.id = fg.genre_id " +
+                    "LEFT JOIN films_directors AS fd ON fd.film_id = f.id " +
+                    "LEFT JOIN directors AS d ON d.id = fd.director_id " +
+                    "LEFT JOIN films_like AS fl ON fl.film_id = f.id " +
+                    "WHERE f.id IN ( " +
+                    "    SELECT film_id FROM films_like WHERE user_id = ? " +
+                    ") AND f.id IN ( " +
+                    "    SELECT film_id FROM films_like WHERE user_id = ? " +
+                    ") " +
+                    "GROUP BY f.id, m.name " +
+                    "ORDER BY likes_count DESC";
 
     private static final String ADD_IN_FEED = "INSERT INTO feed (timestamp,user_id,event_type,operation,entity_id)  VALUES (?, ?, ?, ?, ?)";
 
@@ -427,5 +449,10 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     @Override
     public List<Film> searchFilmsByTitleAndDirector(String query) {
         return getAll(SEARCH_FILMS_BY_TITLE_AND_DIRECTOR, query, query);
+    }
+
+    @Override
+    public Collection<Film> getCommonFilms(int userId, int friendId) {
+        return getAll(GET_COMMON_FILMS, userId, friendId);
     }
 }
