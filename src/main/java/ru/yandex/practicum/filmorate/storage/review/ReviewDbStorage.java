@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.review;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
@@ -11,13 +12,14 @@ import ru.yandex.practicum.filmorate.storage.BaseDbStorage;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Repository
 public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStorage {
 
     private static final String INSERT_QUERY = "INSERT INTO reviews(content, is_positive, user_id, film_id)" +
             "VALUES (?, ?, ?, ?)";
     private static final String UPDATE_QUERY =
-            "UPDATE reviews SET content = ?, is_positive = ?, user_id = ?, film_id = ?  WHERE id = ?";
+            "UPDATE reviews SET content = ?, is_positive = ?  WHERE id = ?";
 
     private static final String FIND_BY_ID_QUERY = "SELECT " +
             "r.id AS review_id, " +
@@ -106,11 +108,10 @@ public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStor
         reviewUpdate(UPDATE_QUERY,
                 review.getContent(),
                 review.getIsPositive(),
-                review.getUserId(),
-                review.getFilmId(),
                 review.getReviewId());
-        postEvent(review.getUserId(), EventType.REVIEW, Operation.UPDATE, review.getReviewId());
-        return review;
+        Review newReview = getReviewById(review.getReviewId()).get();
+        postEvent(newReview.getUserId(), EventType.REVIEW, Operation.UPDATE, review.getReviewId());
+        return newReview;
     }
 
     @Override

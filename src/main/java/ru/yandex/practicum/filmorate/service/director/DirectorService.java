@@ -1,7 +1,9 @@
 package ru.yandex.practicum.filmorate.service.director;
 
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.storage.director.DirectorStorage;
 
@@ -26,10 +28,12 @@ public class DirectorService {
     }
 
     public Director postDirector(Director director) {
+        validateData(director);
         return storage.postDirector(director);
     }
 
     public Director putDirector(Director director) {
+        validateData(director);
         if (storage.isExistDirectorById(director.getId()) && director.getName() != null) {
             return storage.putDirector(director);
         } else {
@@ -41,6 +45,12 @@ public class DirectorService {
     public void deleteDirector(long id) {
         if (storage.isExistDirectorById(id)) {
             storage.deleteDirector(id);
+        }
+    }
+
+    public void validateData(Director director) {
+        if (!StringUtils.hasText(director.getName())) {
+            throw new ValidationException("name is empty");
         }
     }
 }

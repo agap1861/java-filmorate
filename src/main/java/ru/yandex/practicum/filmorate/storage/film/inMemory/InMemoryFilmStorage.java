@@ -180,6 +180,17 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public Collection<Film> getCommonFilms(int userId, int friendId) {
-               return Collections.emptyList();
+        return Collections.emptyList();
     }
+
+    @Override
+    public void addInTableGenresAndFilms(long idFilm, List<Long> idsGenres) {
+
+    }
+
+    @Override
+    public void deleteGenresFromMovie(long filmId) {
+
+    }
+
 }

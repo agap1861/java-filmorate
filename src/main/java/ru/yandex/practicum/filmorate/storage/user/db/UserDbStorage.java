@@ -48,7 +48,7 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
     private static final String QUERY_FOR_FRIEND = "SELECT COUNT(*) " +
             "FROM friends " +
             "WHERE (user_id = ? AND friend_id = ?) ";
-    private static final String GET_FEED_BY_USER_ID = "SELECT * FROM feed WHERE user_id = ? ";
+    private static final String GET_FEED_BY_USER_ID = "SELECT * FROM feed WHERE user_id = ? ORDER BY event_id ASC";
     private static final String IS_EXIST_FEED_BY_USER = "SELECT EXISTS(SELECT 1 FROM feed WHERE user_id = ?) ";
     private static final String GET_RECOMMENDED_FILMS = "SELECT f.id, f.name, f.description, f.release_date, f.duration, " +
             "f.mpa_id, m.name AS mpa_name, " +

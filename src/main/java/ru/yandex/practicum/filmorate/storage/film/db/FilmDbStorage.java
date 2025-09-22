@@ -18,7 +18,6 @@ import ru.yandex.practicum.filmorate.storage.mappers.MPARowMapper;
 import java.sql.Date;
 
 
-
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -92,7 +91,8 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             "LEFT JOIN genres AS g ON g.id = fg.genre_id " +
             "LEFT JOIN films_directors AS fd ON fd.film_id = f.id " +
             "LEFT JOIN directors AS d ON d.id = fd.director_id " +
-            "WHERE g.id = ? AND EXTRACT(YEAR FROM f.release_date) = ? " +
+            "WHERE f.id IN (SELECT film_genres.film_id FROM film_genres WHERE film_genres.genre_id = ?) " +
+            "AND EXTRACT(YEAR FROM f.release_date) = ? " +
             "GROUP BY f.id " +
             "ORDER BY COUNT(fl.user_id) DESC " +
             "LIMIT ? ";
@@ -126,7 +126,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             "LEFT JOIN genres AS g ON g.id = fg.genre_id " +
             "LEFT JOIN films_directors AS fd ON fd.film_id = f.id " +
             "LEFT JOIN directors AS d ON d.id = fd.director_id " +
-            "WHERE g.id = ? " +
+            "WHERE f.id IN (SELECT film_genres.film_id FROM film_genres WHERE film_genres.genre_id = ?)" +
             "GROUP BY f.id " +
             "ORDER BY COUNT(fl.user_id) DESC " +
             "LIMIT ? ";
@@ -245,8 +245,12 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                     "GROUP BY f.id, m.name " +
                     "ORDER BY likes_count DESC";
 
-    private static final String ADD_IN_FEED = "INSERT INTO feed (timestamp,user_id,event_type,operation,entity_id)  VALUES (?, ?, ?, ?, ?)";
-
+    private static final String DELETE_GENRE_FROM_MOVIES = "DELETE FROM film_genres WHERE film_id = ? ";
+    private static final String GET_GENRES_BY_FILM = "SELECT g.*  FROM GENRES AS g " +
+            "LEFT JOIN film_genres AS fg ON fg.genre_id = g.id " +
+            "WHERE fg.film_id = ? ";
+    private static final String DELETE_DIRECTORS_FROM_MOVIES = " DELETE FROM films_directors WHERE film_id = ? ";
+    private static final String EXISTS_LIKE = "SELECT EXISTS(SELECT 1 FROM films_like WHERE film_id = ? AND user_id = ?) ";
 
     public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper, GenreRowMapper genreMapper,
                          MPARowMapper mpaMapper) {
@@ -286,12 +290,18 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         return film;
     }
 
-    private void addInTableGenresAndFilms(long idFilm, List<Long> idsGenres) {
+    @Override
+    public void addInTableGenresAndFilms(long idFilm, List<Long> idsGenres) {
         jdbc.batchUpdate(ADD_IN_FILMS_GENRES, idsGenres, idsGenres.size(),
                 (ps, genreId) -> {
                     ps.setLong(1, idFilm);
                     ps.setLong(2, genreId);
                 });
+    }
+
+    @Override
+    public void deleteGenresFromMovie(long filmId) {
+        delete(DELETE_GENRE_FROM_MOVIES, filmId);
     }
 
     @Override
@@ -312,16 +322,25 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         if (film.getMpa() != null) {
             fields.put("mpa_id", film.getMpa().getId());
         }
+        if (!film.getGenres().isEmpty()) {
+            deleteGenresFromMovie(film.getId());
+            addInTableGenresAndFilms(film.getId(), film.getGenres().stream().map(Genre::getId).toList());
+        } else {
+            delete(DELETE_GENRE_FROM_MOVIES, film.getId());
+        }
+
         if (fields.isEmpty()) {
             throw new IllegalArgumentException();
         }
         update(UPDATE_FILM, fields, film.getId());
-        if (film.getDirectors() != null && !film.getDirectors().isEmpty()) {
+        if (!film.getDirectors().isEmpty()) {
             delete(DELETE_DIRECTORS, film.getId());
 
             film.getDirectors().forEach(director ->
                     jdbc.update(ADD_IN_FILMS_DIRECTOR, film.getId(), director.getId())
             );
+        } else {
+            delete(DELETE_DIRECTORS_FROM_MOVIES, film.getId());
         }
         return film;
     }
@@ -338,14 +357,16 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     @Override
     public boolean addLike(long id, long idUser) {
-        int rowsUpdate = jdbc.update(ADD_LIKE, id, idUser);
-        // return rowsUpdate != 0;
-        if (rowsUpdate != 0) {
-            postEvent(idUser, EventType.LIKE, Operation.ADD, id);
-            return true;
-        } else {
+        boolean isExists = jdbc.queryForObject(EXISTS_LIKE, Boolean.class, id, idUser);
+        postEvent(idUser, EventType.LIKE, Operation.ADD, id);
+        if (isExists) {
             return false;
+        } else {
+            jdbc.update(ADD_LIKE, id, idUser);
+            return true;
         }
+
+
     }
 
     @Override
@@ -365,6 +386,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     @Override
     public List<Film> getTopFilmsByGenre(Integer count, Integer genreId) {
+        log.info(getAll(GET_TOP_FILMS_BY_GENRE_LIMITED, genreId, count).toString());
         return getAll(GET_TOP_FILMS_BY_GENRE_LIMITED, genreId, count);
     }
 
@@ -376,7 +398,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     @Override
     public void removeLike(long idFilm, long idUser) {
         remove(REMOVE_LIKE, idFilm, idUser);
-        postEvent(idUser,EventType.LIKE,Operation.REMOVE,idFilm);
+        postEvent(idUser, EventType.LIKE, Operation.REMOVE, idFilm);
     }
 
     @Override

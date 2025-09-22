@@ -63,10 +63,7 @@ public class FilmService {
     public void addLike(long idFilm, long idUser) {
         validateExist(idFilm, idUser);
 
-        boolean flag = filmStorage.addLike(idFilm, idUser);
-        if (!flag) {
-            throw new ValidationException("user already add like in this film");
-        }
+        filmStorage.addLike(idFilm, idUser);
 
 
     }
@@ -85,7 +82,7 @@ public class FilmService {
 
     public List<Film> getTopCountFilms(Optional<Integer> count, Optional<Integer> genreId, Optional<Integer> year) {
 
-        final int basic = count.isPresent() ? count.get() : 10;
+        final int basic = count.orElse(10);
 
         if (genreId.isEmpty() && year.isEmpty())
             return filmStorage.getTopFilms(basic);
@@ -167,6 +164,7 @@ public class FilmService {
             throw new NotFoundException("Film not found");
         }
 
+
         return filmStorage.putFilm(film);
     }
 
@@ -217,21 +215,18 @@ public class FilmService {
         if (directorStorage.isExistDirectorById(id)) {
             return filmStorage.getAllFilmsByDirectorSortByYear(id);
         } else {
-            return null;
+            throw new NotFoundException("not found");
         }
     }
 
     public List<Film> getAllFilmsByDirectorSortByLikes(long id) {
-        try {
-            if (directorStorage.isExistDirectorById(id)) {
-                return filmStorage.getAllFilmsByDirectorSortByLikes(id);
-            } else {
-                return null;
-            }
-        } catch (Exception e) {
-            log.info(e.getMessage());
+
+        if (directorStorage.isExistDirectorById(id)) {
+            return filmStorage.getAllFilmsByDirectorSortByLikes(id);
+        } else {
+            throw new NotFoundException("not found");
         }
-        return null;
+
     }
 
     public Collection<Film> getCommonFilms(int userId, int friendId) {

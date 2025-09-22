@@ -55,4 +55,9 @@ public interface FilmStorage {
     List<Film> searchFilmsByTitleAndDirector(String query);
 
     Collection<Film> getCommonFilms(int userId, int friendId);
+
+    void addInTableGenresAndFilms(long idFilm, List<Long> idsGenres);
+
+    void deleteGenresFromMovie(long filmId);
+
 }
