@@ -93,4 +93,10 @@ public class FilmController {
         return service.searchFilms(query, by);
     }
 
+    @GetMapping("/common")
+    public Collection<Film> getCommonFilms(@RequestParam(name = "userId") int userId,
+                                           @RequestParam(name = "friendId") int friendId) {
+        return service.getCommonFilms(userId, friendId);
+    }
+
 }
