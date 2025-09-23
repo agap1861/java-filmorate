@@ -58,7 +58,7 @@ public class UserController {
 
     @GetMapping("/{id}/feed")
     public List<Feed> getFeed(@PathVariable long id) {
-        return service.getFeedByUSer(id);
+        return service.getFeedByUser(id);
     }
 
     @PostMapping
