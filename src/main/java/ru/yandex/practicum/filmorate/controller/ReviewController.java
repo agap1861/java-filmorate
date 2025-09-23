@@ -1,10 +1,10 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.service.review.ReviewService;
 
@@ -64,10 +64,8 @@ public class ReviewController {
 
     @GetMapping
     public List<Review> getReviews(@RequestParam(required = false) Long filmId,
-                                   @RequestParam(required = false, defaultValue = "10") Integer count) {
-        if (count <= 0) {
-            throw new ValidationException("Количество отзывов должно быть положительным");
-        }
+                                   @RequestParam(required = false, defaultValue = "10")
+                                   @Min(1) Integer count) {
         return reviewService.getReviews(filmId, count);
     }
 }
