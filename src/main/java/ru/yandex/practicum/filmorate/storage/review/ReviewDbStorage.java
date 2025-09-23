@@ -82,7 +82,8 @@ public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStor
     public List<Review> getReviews(Long filmId, Integer count) {
         if (filmId == null) {
             return getAll(GET_ALL_REVIEWS_QUERY, count);
-        } else return getAll(GET_REVIEWS_BY_FILM_QUERY, filmId, count);
+        }
+        return getAll(GET_REVIEWS_BY_FILM_QUERY, filmId, count);
     }
 
     @Override

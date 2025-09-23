@@ -37,8 +37,8 @@ public class ReviewService {
     }
 
     public Review createReview(Review review) {
-        isExistUser(review.getUserId());
-        isExistFilm(review.getFilmId());
+        validateUserExists(review.getUserId());
+        validateFilmExists(review.getFilmId());
         reviewStorage.addReview(review);
         return review;
     }
@@ -53,47 +53,47 @@ public class ReviewService {
         if (newReview.getReviewId() < 1) {
             throw new ValidationException("Должен быть указан корректный id");
         }
-        isExistReview(newReview.getReviewId());
+        validateReviewExists(newReview.getReviewId());
         if (newReview.getUserId() != null) {
-            isExistUser(newReview.getUserId());
+            validateUserExists(newReview.getUserId());
         }
         if (newReview.getFilmId() != null) {
-            isExistFilm(newReview.getFilmId());
+            validateFilmExists(newReview.getFilmId());
         }
         return reviewStorage.updateReview(newReview);
     }
 
     public void addLike(long reviewId, long userId) {
-        isExistReview(reviewId);
-        isExistUser(userId);
+        validateReviewExists(reviewId);
+        validateUserExists(userId);
         reviewStorage.addIsLike(reviewId, userId, true);
     }
 
     public void addDislike(long reviewId, long userId) {
-        isExistReview(reviewId);
-        isExistUser(userId);
+        validateReviewExists(reviewId);
+        validateUserExists(userId);
         reviewStorage.addIsLike(reviewId, userId, false);
     }
 
     public void deleteRating(long reviewId, long userId) {
-        isExistReview(reviewId);
-        isExistUser(userId);
+        validateReviewExists(reviewId);
+        validateUserExists(userId);
         reviewStorage.deleteRating(reviewId, userId);
     }
 
-    private void isExistUser(long userId) {
+    private void validateUserExists(long userId) {
         if (!userStorage.exists(userId)) {
             throw new NotFoundException("Пользователя с id =" + userId + " не найдено");
         }
     }
 
-    private void isExistFilm(long filmId) {
+    private void validateFilmExists(long filmId) {
         if (!filmStorage.isExistFilmById(filmId)) {
             throw new NotFoundException("Фильма с id =" + filmId + " не найдено");
         }
     }
 
-    private void isExistReview(long reviewId) {
+    private void validateReviewExists(long reviewId) {
         if (!reviewStorage.existsById(reviewId)) {
             throw new NotFoundException("Отзыва с id =" + reviewId + " не найдено");
         }
