@@ -178,8 +178,9 @@ public class FilmService {
     }
 
     public void removeFilm(long filmId) {
-        filmStorage.findFilmById(filmId)
-                .orElseThrow(() -> new NotFoundException("Not found"));
+        if (!filmStorage.isExistFilmById(filmId)) {
+            throw new NotFoundException("Not found");
+        }
         filmStorage.removeFilm(filmId);
     }
 
