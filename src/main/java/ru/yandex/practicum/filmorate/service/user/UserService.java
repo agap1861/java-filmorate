@@ -106,7 +106,9 @@ public class UserService {
     }
 
     public void removeUser(long userId) {
-        isExistUser(userId);
+        if (!storage.exists(userId)) {
+            throw new NotFoundException("Not found");
+        }
         storage.removeUser(userId);
     }
 

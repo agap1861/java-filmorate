@@ -44,8 +44,9 @@ public class ReviewService {
     }
 
     public void removeReview(long reviewId) {
-        reviewStorage.getReviewById(reviewId)
-                .orElseThrow(() -> new NotFoundException("Not found"));
+        if (!reviewStorage.existsById(reviewId)) {
+            throw new NotFoundException("Not found");
+        }
         reviewStorage.removeReview(reviewId);
     }
 
