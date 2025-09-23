@@ -110,7 +110,7 @@ public class UserService {
         storage.removeUser(userId);
     }
 
-    public List<Feed> getFeedByUSer(long userId) {
+    public List<Feed> getFeedByUser(long userId) {
         isExistUser(userId);
         if (storage.isExistFeedByUser(userId)) {
             return storage.getFeedByUserId(userId);

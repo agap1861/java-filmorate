@@ -54,11 +54,7 @@ public class FilmController {
 
     @GetMapping("/director/{directorId}")
     public List<Film> getAllFilmsByDirectorSortBy(@PathVariable long directorId, @RequestParam String sortBy) {
-        if (sortBy.equals("year")) {
-            return service.getAllFilmsByDirectorSortByYear(directorId);
-        } else {
-            return service.getAllFilmsByDirectorSortByLikes(directorId);
-        }
+       return service.getFilmSortBy(directorId, sortBy);
     }
 
     @PostMapping

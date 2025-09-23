@@ -220,23 +220,19 @@ public class FilmService {
         return mpa;
     }
 
-    public List<Film> getAllFilmsByDirectorSortByYear(long id) {
-        if (directorStorage.isExistDirectorById(id)) {
+
+    public List<Film> getFilmSortBy(long id, String sortBy) {
+        if (!directorStorage.isExistDirectorById(id)) {
+            throw new NotFoundException("not found");
+        }
+        if (sortBy.equals("year")) {
             return filmStorage.getAllFilmsByDirectorSortByYear(id);
         } else {
-            throw new NotFoundException("not found");
-        }
-    }
-
-    public List<Film> getAllFilmsByDirectorSortByLikes(long id) {
-
-        if (directorStorage.isExistDirectorById(id)) {
             return filmStorage.getAllFilmsByDirectorSortByLikes(id);
-        } else {
-            throw new NotFoundException("not found");
         }
 
     }
+
 
     public Collection<Film> getCommonFilms(int userId, int friendId) {
         log.info("Запрос общих фильмов пользователя {} и {}", userId, friendId);
