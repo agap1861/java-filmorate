@@ -40,29 +40,19 @@ public class UserService {
     }
 
     public void removeFromFriends(long userId, long friendId) {
-
         validateExistFriends(userId, friendId);
-
-
         if (!storage.haveUserFriend(userId, friendId)) {
             return;
-
         }
         storage.removeFriend(userId, friendId);
-
-
     }
 
     public List<User> getAllFriendsOfUSerById(long id) {
-
         isExistUser(id);
         if (!storage.isExistListOfFriends(id)) {
             return List.of();
         }
-
-
         return storage.getAllFriendsOfUserById(id);
-
     }
 
     public Set<Film> getRecommendationsForUser(long userId) {
@@ -79,9 +69,7 @@ public class UserService {
         if (userSet == null || friendSet == null) {
             return Set.of();
         }
-
         return storage.getCommonFriends(userId, friendId);
-
     }
 
     public Collection<User> getUsers() {

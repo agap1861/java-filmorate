@@ -32,6 +32,8 @@ public class FilmService {
     private UserStorage userStorage;
     private DirectorStorage directorStorage;
 
+    private static final int GET_TOP_10 = 10;
+
 
     @Autowired
     public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage,
@@ -71,14 +73,10 @@ public class FilmService {
 
     public void addLike(long idFilm, long idUser) {
         validateExist(idFilm, idUser);
-
         filmStorage.addLike(idFilm, idUser);
-
-
     }
 
     public void removeLike(long idFilm, long idUser) {
-
         validateExist(idFilm, idUser);
 
         Set<Long> users = filmStorage.getFilmsLikes(idFilm);
@@ -86,12 +84,11 @@ public class FilmService {
             throw new NotFoundException("user didn't like this film");
         }
         filmStorage.removeLike(idFilm, idUser);
-
     }
 
     public List<Film> getTopCountFilms(Optional<Integer> count, Optional<Integer> genreId, Optional<Integer> year) {
 
-        final int basic = count.orElse(10);
+        final int basic = count.orElse(GET_TOP_10);
 
         if (genreId.isEmpty() && year.isEmpty())
             return filmStorage.getTopFilms(basic);

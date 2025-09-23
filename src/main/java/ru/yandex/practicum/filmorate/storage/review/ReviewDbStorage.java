@@ -88,7 +88,7 @@ public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStor
 
     @Override
     public void removeReview(long reviewId) {
-        postEvent(getReviewById(reviewId).get().getUserId(), EventType.REVIEW, Operation.REMOVE, reviewId);//может стоит изменить
+        postEvent(getReviewById(reviewId).get().getUserId(), EventType.REVIEW, Operation.REMOVE, reviewId);
         delete(REMOVE_REVIEW, reviewId);
     }
 
