@@ -89,8 +89,7 @@ public class FilmController {
     @GetMapping("/search")
     public List<Film> searchFilms(@RequestParam String query,
                                   @RequestParam(defaultValue = "title,director") List<String> by) {
-        log.info("Search films with query: '{}', by: {}", query, by);
-        return service.searchFilms(query, by);
+                return service.searchFilms(query, by);
     }
 
     @GetMapping("/common")

@@ -42,22 +42,31 @@ public class FilmService {
     }
 
     public List<Film> searchFilms(String query, List<String> by) {
-        if (query == null || query.trim().isEmpty()) {
+        log.info("Search films with query: '{}', by: {}", query, by);
+        if (!StringUtils.hasText(query)) {
+            log.info("Empty or blank search query, returning empty list");
             return new ArrayList<>();
         }
 
-        String lowerCaseQuery = query.toLowerCase().trim();
+        String lowerCaseQuery = query.trim().toLowerCase();
+        List<Film> result;
 
         if (by.contains("title") && by.contains("director")) {
-            return filmStorage.searchFilmsByTitleAndDirector(lowerCaseQuery);
+            log.debug("Searching by title and director");
+            result = filmStorage.searchFilmsByTitleAndDirector(lowerCaseQuery);
         } else if (by.contains("title")) {
-            return filmStorage.searchFilmsByTitle(lowerCaseQuery);
+            log.debug("Searching by title only");
+            result = filmStorage.searchFilmsByTitle(lowerCaseQuery);
         } else if (by.contains("director")) {
-            return filmStorage.searchFilmsByDirector(lowerCaseQuery);
+            log.debug("Searching by director only");
+            result = filmStorage.searchFilmsByDirector(lowerCaseQuery);
         } else {
-            // По умолчанию ищем и по названию, и по режиссеру
-            return filmStorage.searchFilmsByTitleAndDirector(lowerCaseQuery);
+            log.debug("Default search by title and director");
+            result = filmStorage.searchFilmsByTitleAndDirector(lowerCaseQuery);
         }
+
+        log.info("Search completed, found {} films", result.size());
+        return result;
     }
 
     public void addLike(long idFilm, long idUser) {
