@@ -8,6 +8,8 @@ import org.springframework.util.StringUtils;
 import ru.yandex.practicum.filmorate.exception.DuplicateFriendException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.Feed;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
@@ -38,29 +40,24 @@ public class UserService {
     }
 
     public void removeFromFriends(long userId, long friendId) {
-
         validateExistFriends(userId, friendId);
-
-
         if (!storage.haveUserFriend(userId, friendId)) {
             return;
-
         }
         storage.removeFriend(userId, friendId);
-
-
     }
 
     public List<User> getAllFriendsOfUSerById(long id) {
-
         isExistUser(id);
         if (!storage.isExistListOfFriends(id)) {
             return List.of();
         }
-
-
         return storage.getAllFriendsOfUserById(id);
+    }
 
+    public Set<Film> getRecommendationsForUser(long userId) {
+        isExistUser(userId);
+        return storage.getRecommendationsForUser(userId);
     }
 
     public Set<User> getCommonFriends(long userId, long friendId) {
@@ -72,9 +69,7 @@ public class UserService {
         if (userSet == null || friendSet == null) {
             return Set.of();
         }
-
         return storage.getCommonFriends(userId, friendId);
-
     }
 
     public Collection<User> getUsers() {
@@ -96,6 +91,22 @@ public class UserService {
         isExistUser(user.getId());
         validateOfDataForPut(user);
         return storage.putUser(user);
+    }
+
+    public void removeUser(long userId) {
+        if (!storage.exists(userId)) {
+            throw new NotFoundException("Not found");
+        }
+        storage.removeUser(userId);
+    }
+
+    public List<Feed> getFeedByUser(long userId) {
+        isExistUser(userId);
+        if (storage.isExistFeedByUser(userId)) {
+            return storage.getFeedByUserId(userId);
+        } else {
+            return null;
+        }
     }
 
     public void validateOfDataForPost(User user) {

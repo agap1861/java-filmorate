@@ -1,6 +1,8 @@
 package ru.yandex.practicum.filmorate.storage.user;
 
 
+import ru.yandex.practicum.filmorate.model.Feed;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.*;
@@ -12,6 +14,8 @@ public interface UserStorage {
 
     User putUser(User user);
 
+    void removeUser(long userId);
+
     Optional<User> getUserById(long id);
 
     boolean exists(long id);
@@ -20,6 +24,8 @@ public interface UserStorage {
 
     List<User> getAllFriendsOfUserById(long id);
 
+    Set<Film> getRecommendationsForUser(long userId);
+
     Set<User> getCommonFriends(long userId, long friendId);
 
     void removeFriend(long userId, long friendId);
@@ -27,5 +33,9 @@ public interface UserStorage {
     boolean isExistListOfFriends(long id);
 
     boolean haveUserFriend(long first, long second);
+
+    List<Feed> getFeedByUserId(long id);
+
+    boolean isExistFeedByUser(long id);
 
 }

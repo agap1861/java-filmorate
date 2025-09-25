@@ -13,6 +13,8 @@ public interface FilmStorage {
 
     Film putFilm(Film film);
 
+    void removeFilm(long filmId);
+
     Optional<Film> findFilmById(long id);
 
     boolean addLike(long id, long idUser);
@@ -20,6 +22,12 @@ public interface FilmStorage {
     Set<Long> getFilmsLikes(long id);
 
     List<Film> getTopFilms(Integer count);
+
+    List<Film> getTopFilmsByGenreAndYear(Integer count, Integer genreId, Integer year);
+
+    List<Film> getTopFilmsByGenre(Integer count, Integer genreId);
+
+    List<Film> getTopFilmsByYear(Integer count, Integer year);
 
     void removeLike(long idFilm, long idUser);
 
@@ -35,4 +43,21 @@ public interface FilmStorage {
     List<Genre> getGenresByIds(List<Long> ids);
 
     boolean isExistFilmById(long id);
+
+    List<Film> getAllFilmsByDirectorSortByYear(long id);
+
+    List<Film> getAllFilmsByDirectorSortByLikes(long id);
+
+    List<Film> searchFilmsByTitle(String query);
+
+    List<Film> searchFilmsByDirector(String query);
+
+    List<Film> searchFilmsByTitleAndDirector(String query);
+
+    Collection<Film> getCommonFilms(int userId, int friendId);
+
+    void addInTableGenresAndFilms(long idFilm, List<Long> idsGenres);
+
+    void deleteGenresFromMovie(long filmId);
+
 }

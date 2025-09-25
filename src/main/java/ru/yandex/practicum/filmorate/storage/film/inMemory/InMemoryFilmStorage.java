@@ -12,6 +12,7 @@ import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 @Slf4j
@@ -60,6 +61,9 @@ public class InMemoryFilmStorage implements FilmStorage {
         return oldVersion;
     }
 
+    @Override
+    public void removeFilm(long filmId) {
+    }
 
     @Override
     public Optional<Film> findFilmById(long id) {
@@ -77,6 +81,21 @@ public class InMemoryFilmStorage implements FilmStorage {
                 .toList();
 
 
+    }
+
+    @Override
+    public List<Film> getTopFilmsByGenreAndYear(Integer count, Integer genreId, Integer year) {
+        return List.of();
+    }
+
+    @Override
+    public List<Film> getTopFilmsByGenre(Integer count, Integer genreId) {
+        return List.of();
+    }
+
+    @Override
+    public List<Film> getTopFilmsByYear(Integer count, Integer year) {
+        return List.of();
     }
 
     @Override
@@ -124,4 +143,54 @@ public class InMemoryFilmStorage implements FilmStorage {
     public boolean isExistFilmById(long id) {
         return false;
     }
+
+    @Override
+    public List<Film> getAllFilmsByDirectorSortByYear(long id) {
+        return List.of();
+    }
+
+    @Override
+    public List<Film> getAllFilmsByDirectorSortByLikes(long id) {
+        return List.of();
+    }
+
+    @Override
+    public List<Film> searchFilmsByTitle(String query) {
+        String lowerQuery = query.toLowerCase();
+        return films.values().stream()
+                .filter(film -> film.getName().toLowerCase().contains(lowerQuery))
+                .sorted((f1, f2) -> Integer.compare(
+                        filmsLikes.getOrDefault(f2.getId(), Collections.emptySet()).size(),
+                        filmsLikes.getOrDefault(f1.getId(), Collections.emptySet()).size()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Film> searchFilmsByDirector(String query) {
+        // Для in-memory реализации поиск по режиссеру не поддерживается
+        return Collections.emptyList();
+    }
+
+    @Override
+    public List<Film> searchFilmsByTitleAndDirector(String query) {
+        // Для in-memory реализации поиск по режиссеру не поддерживается
+        return searchFilmsByTitle(query);
+    }
+
+    @Override
+    public Collection<Film> getCommonFilms(int userId, int friendId) {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public void addInTableGenresAndFilms(long idFilm, List<Long> idsGenres) {
+
+    }
+
+    @Override
+    public void deleteGenresFromMovie(long filmId) {
+
+    }
+
 }

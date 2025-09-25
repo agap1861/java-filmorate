@@ -21,6 +21,7 @@ public class Film {
     private Duration duration;
     private MPA mpa;
     private List<Genre> genres;
+    private List<Director> directors;
 
     public Film(Long id, String name, String description, LocalDate releaseDate, Duration duration) {
         this.id = id;

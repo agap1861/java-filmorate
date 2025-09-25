@@ -7,6 +7,8 @@ import org.springframework.stereotype.Component;
 
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 
+import ru.yandex.practicum.filmorate.model.Feed;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
@@ -65,6 +67,11 @@ public class InMemoryUserStorage implements UserStorage {
         return oldVersion;
     }
 
+    @Override
+    public void removeUser(long id) {
+
+    }
+
 
     @Override
     public Optional<User> getUserById(long id) {
@@ -89,6 +96,11 @@ public class InMemoryUserStorage implements UserStorage {
                 .map(userId -> getUserById(userId).orElseThrow(() -> new NotFoundException("Not found")))
                 .toList();
 
+    }
+
+    @Override
+    public Set<Film> getRecommendationsForUser(long userId) {
+        return Set.of();
     }
 
     @Override
@@ -123,6 +135,16 @@ public class InMemoryUserStorage implements UserStorage {
     @Override
     public boolean haveUserFriend(long first, long second) {
         return friends.get(first).contains(second) && friends.get(second).contains(first);
+    }
+
+    @Override
+    public List<Feed> getFeedByUserId(long id) {
+        return List.of();
+    }
+
+    @Override
+    public boolean isExistFeedByUser(long id) {
+        return false;
     }
 
 /*    @Override

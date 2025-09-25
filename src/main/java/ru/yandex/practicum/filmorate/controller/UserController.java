@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 
+import ru.yandex.practicum.filmorate.model.Feed;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.user.UserService;
 
@@ -41,13 +43,22 @@ public class UserController {
 
     @GetMapping("/{id}/friends")
     public List<User> getAllFriendsOfUserById(@PathVariable long id) {
-
         return service.getAllFriendsOfUSerById(id);
     }
 
     @GetMapping("/{id}/friends/common/{otherId}")
     public Set<User> getCommonFriends(@PathVariable long id, @PathVariable long otherId) {
         return service.getCommonFriends(id, otherId);
+    }
+
+    @GetMapping("/{id}/recommendations")
+    public Collection<Film> getRecommendations(@PathVariable long id) {
+        return service.getRecommendationsForUser(id);
+    }
+
+    @GetMapping("/{id}/feed")
+    public List<Feed> getFeed(@PathVariable long id) {
+        return service.getFeedByUser(id);
     }
 
     @PostMapping
@@ -61,6 +72,11 @@ public class UserController {
         return service.putUser(user);
 
 
+    }
+
+    @DeleteMapping("/{id}")
+    public void removeUser(@PathVariable long id) {
+        service.removeUser(id);
     }
 
     @PutMapping("/{id}/friends/{friendId}")

@@ -4,14 +4,17 @@ package ru.yandex.practicum.filmorate.service.film;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MPA;
+import ru.yandex.practicum.filmorate.storage.director.DirectorStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
@@ -27,26 +30,53 @@ public class FilmService {
 
     private FilmStorage filmStorage;
     private UserStorage userStorage;
+    private DirectorStorage directorStorage;
+
+    private static final int GET_TOP_10 = 10;
+
 
     @Autowired
-    public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage, @Qualifier("userDbStorage") UserStorage userStorage) {
+    public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage,
+                       @Qualifier("userDbStorage") UserStorage userStorage, DirectorStorage directorStorage) {
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
+        this.directorStorage = directorStorage;
+    }
+
+    public List<Film> searchFilms(String query, List<String> by) {
+        log.info("Search films with query: '{}', by: {}", query, by);
+        if (!StringUtils.hasText(query)) {
+            log.info("Empty or blank search query, returning empty list");
+            return new ArrayList<>();
+        }
+
+        String lowerCaseQuery = query.trim().toLowerCase();
+        List<Film> result;
+
+        if (by.contains("title") && by.contains("director")) {
+            log.debug("Searching by title and director");
+            result = filmStorage.searchFilmsByTitleAndDirector(lowerCaseQuery);
+        } else if (by.contains("title")) {
+            log.debug("Searching by title only");
+            result = filmStorage.searchFilmsByTitle(lowerCaseQuery);
+        } else if (by.contains("director")) {
+            log.debug("Searching by director only");
+            result = filmStorage.searchFilmsByDirector(lowerCaseQuery);
+        } else {
+            log.debug("Default search by title and director");
+            result = filmStorage.searchFilmsByTitleAndDirector(lowerCaseQuery);
+        }
+
+        log.info("Search completed, found {} films", result.size());
+        return result;
     }
 
     public void addLike(long idFilm, long idUser) {
         validateExist(idFilm, idUser);
-
-        boolean flag = filmStorage.addLike(idFilm, idUser);
-        if (!flag) {
-            throw new ValidationException("user already add like in this film");
-        }
-
-
+        filmStorage.addLike(idFilm, idUser);
     }
 
     public void removeLike(long idFilm, long idUser) {
-
         validateExist(idFilm, idUser);
 
         Set<Long> users = filmStorage.getFilmsLikes(idFilm);
@@ -54,14 +84,21 @@ public class FilmService {
             throw new NotFoundException("user didn't like this film");
         }
         filmStorage.removeLike(idFilm, idUser);
-
     }
 
-    public List<Film> getTopCountFilms(Integer count) {
+    public List<Film> getTopCountFilms(Optional<Integer> count, Optional<Integer> genreId, Optional<Integer> year) {
 
-        final int basic = count != null ? count : 10;
-        return filmStorage.getTopFilms(basic);
+        final int basic = count.orElse(GET_TOP_10);
 
+        if (genreId.isEmpty() && year.isEmpty())
+            return filmStorage.getTopFilms(basic);
+        else if (genreId.isPresent() && year.isEmpty()) {
+            return filmStorage.getTopFilmsByGenre(basic, genreId.get());
+        } else if (genreId.isEmpty() && year.isPresent()) {
+            return filmStorage.getTopFilmsByYear(basic, year.get());
+        } else {
+            return filmStorage.getTopFilmsByGenreAndYear(basic, genreId.get(), year.get());
+        }
     }
 
     public void validateOfData(Film film) {
@@ -87,6 +124,7 @@ public class FilmService {
             film.setMpa(mpa);
         }
         if (film.getGenres() != null && !film.getGenres().isEmpty()) {
+
             List<Long> idsGenres = film.getGenres().stream()
                     .map(Genre::getId)
                     .distinct()
@@ -101,6 +139,20 @@ public class FilmService {
         } else {
             film.setGenres(List.of());
         }
+        if (film.getDirectors() != null && !film.getDirectors().isEmpty()) {
+            List<Long> idsDirectors = film.getDirectors().stream()
+                    .map(Director::getId)
+                    .distinct()
+                    .toList();
+            List<Director> directors = directorStorage.getDirectorsByIds(idsDirectors);
+            if (directors.size() != idsDirectors.size()) {
+                throw new NotFoundException("not found");
+            }
+            film.setDirectors(directors);
+        } else {
+            film.setDirectors(List.of());
+        }
+
     }
 
     public Film postFilm(Film film) {
@@ -118,7 +170,15 @@ public class FilmService {
             throw new NotFoundException("Film not found");
         }
 
+
         return filmStorage.putFilm(film);
+    }
+
+    public void removeFilm(long filmId) {
+        if (!filmStorage.isExistFilmById(filmId)) {
+            throw new NotFoundException("Not found");
+        }
+        filmStorage.removeFilm(filmId);
     }
 
     public Collection<Film> getFilms() {
@@ -158,5 +218,24 @@ public class FilmService {
         return mpa;
     }
 
+
+    public List<Film> getFilmSortBy(long id, String sortBy) {
+        if (!directorStorage.isExistDirectorById(id)) {
+            throw new NotFoundException("not found");
+        }
+        if (sortBy.equals("year")) {
+            return filmStorage.getAllFilmsByDirectorSortByYear(id);
+        } else {
+            return filmStorage.getAllFilmsByDirectorSortByLikes(id);
+        }
+
+    }
+
+
+    public Collection<Film> getCommonFilms(int userId, int friendId) {
+        log.info("Запрос общих фильмов пользователя {} и {}", userId, friendId);
+
+        return filmStorage.getCommonFilms(userId, friendId);
+    }
 
 }
